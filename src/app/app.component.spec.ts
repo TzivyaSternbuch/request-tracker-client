@@ -20,6 +20,14 @@ describe('AppComponent', () => {
     expect(toolbar?.textContent).toContain('Request Tracker');
   });
 
+  it('navigate_EmptyPath_RedirectsToRequests', async () => {
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/');
+
+    expect(TestBed.inject(Router).url).toBe('/requests');
+  });
+
   it('navigate_UnknownPath_RedirectsToRequests', async () => {
     const harness = await RouterTestingHarness.create();
 
