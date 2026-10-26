@@ -1,0 +1,239 @@
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatPaginatorHarness } from '@angular/material/paginator/testing';
+import { By } from '@angular/platform-browser';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { Observable, of } from 'rxjs';
+import { routes } from '../../../app.routes';
+import { RequestsApiService } from '../../../core/api/requests-api.service';
+import { PagedResult } from '../../../core/models/paged-result.model';
+import { DEFAULT_QUERY, RequestQuery } from '../../../core/models/request-query.model';
+import { RequestDto } from '../../../core/models/request.model';
+import { RequestsFilterBarComponent } from '../requests-filter-bar/requests-filter-bar.component';
+import { RequestsTableComponent } from '../requests-table/requests-table.component';
+import { LoadStatus, RequestsStore } from '../requests.store';
+import { RequestsListComponent } from './requests-list.component';
+
+const ROW: RequestDto = {
+  id: 1,
+  title: 'Printer jam',
+  organizationName: 'Acme',
+  status: 'New',
+  priority: 'High',
+  assignedTo: 'dana',
+  createdAt: '2026-01-02T03:04:05+00:00',
+  updatedAt: '2026-01-02T03:04:05+00:00',
+  version: 'AAAAAAAAB9E=',
+};
+
+// The store's public surface the page reads, with state set by each test and actions recorded.
+class FakeRequestsStore {
+  readonly query = signal<RequestQuery>(DEFAULT_QUERY);
+  readonly status = signal<LoadStatus>('idle');
+  readonly items = signal<RequestDto[]>([]);
+  readonly totalCount = signal(0);
+  readonly errorMessage = signal<string | null>(null);
+  readonly searchDraft = signal('');
+  readonly organizationDraft = signal('');
+
+  readonly setFilters = vi.fn();
+  readonly addAssignee = vi.fn();
+  readonly removeAssignee = vi.fn();
+  readonly clearFilters = vi.fn();
+  readonly toggleSort = vi.fn();
+  readonly resetSort = vi.fn();
+  readonly setPage = vi.fn();
+  readonly retry = vi.fn();
+  readonly setSearchDraft = vi.fn();
+  readonly setOrganizationDraft = vi.fn();
+  readonly submitText = vi.fn();
+}
+
+describe('RequestsListComponent', () => {
+  let store: FakeRequestsStore;
+  let fixture: ComponentFixture<RequestsListComponent>;
+  let root: HTMLElement;
+
+  beforeEach(() => {
+    store = new FakeRequestsStore();
+    TestBed.overrideComponent(RequestsListComponent, {
+      set: { providers: [{ provide: RequestsStore, useValue: store }] },
+    });
+    fixture = TestBed.createComponent(RequestsListComponent);
+    root = fixture.nativeElement as HTMLElement;
+  });
+
+  async function render(state: {
+    status: LoadStatus;
+    items?: RequestDto[];
+    totalCount?: number;
+    errorMessage?: string;
+    query?: Partial<RequestQuery>;
+  }): Promise<void> {
+    store.status.set(state.status);
+    store.items.set(state.items ?? []);
+    store.totalCount.set(state.totalCount ?? 0);
+    store.errorMessage.set(state.errorMessage ?? null);
+    store.query.set({ ...DEFAULT_QUERY, ...state.query });
+    await fixture.whenStable();
+  }
+
+  function element(selector: string): HTMLElement {
+    const found = root.querySelector<HTMLElement>(selector);
+    if (!found) throw new Error(`No element "${selector}"`);
+    return found;
+  }
+
+  function button(container: HTMLElement, text: string): HTMLButtonElement {
+    const found = Array.from(container.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes(text),
+    );
+    if (!found) throw new Error(`No button "${text}"`);
+    return found;
+  }
+
+  function paginator(): Promise<MatPaginatorHarness> {
+    return TestbedHarnessEnvironment.loader(fixture).getHarness(MatPaginatorHarness);
+  }
+
+  it('render_Loading_ShowsProgressBar', async () => {
+    await render({ status: 'loading', items: [ROW], totalCount: 41 });
+
+    expect(root.querySelector('mat-progress-bar')).not.toBeNull();
+    expect(element('table').classList).toContain('loading');
+    expect(root.textContent).toContain('Printer jam');
+  });
+
+  it('render_Success_ShowsRowsWithoutProgressBar', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 41 });
+
+    expect(root.querySelector('mat-progress-bar')).toBeNull();
+    expect(element('table').classList).not.toContain('loading');
+    expect(root.querySelectorAll('tbody tr').length).toBe(1);
+    expect(await (await paginator()).getRangeLabel()).toBe('1 – 20 of 41');
+  });
+
+  it('render_SuccessEmpty_ShowsEmptyStateWithClearFilters', async () => {
+    await render({ status: 'success', items: [], totalCount: 0, query: { status: ['New'] } });
+    const empty = element('.empty-state');
+
+    button(empty, 'Clear filters').click();
+
+    expect(empty.textContent).toContain('No requests match these filters');
+    expect(root.querySelector('table')).toBeNull();
+    expect(store.clearFilters).toHaveBeenCalledOnce();
+  });
+
+  it('render_Error_ShowsMessageAndRetryCallsStore', async () => {
+    // The store keeps the previous result during an error; the page must not show it.
+    await render({ status: 'error', items: [ROW], totalCount: 41, errorMessage: 'Server down' });
+    const alert = element('[role="alert"]');
+
+    button(alert, 'Retry').click();
+
+    expect(alert.textContent).toContain('Server down');
+    expect(root.querySelector('table')).toBeNull();
+    expect(root.querySelector('mat-paginator')).toBeNull();
+    expect(store.retry).toHaveBeenCalledOnce();
+  });
+
+  it('render_PageBeyondEnd_ShowsEmptyStateAndPaginator', async () => {
+    await render({ status: 'success', items: [], totalCount: 3, query: { page: 999 } });
+    const pages = await paginator();
+
+    await pages.goToFirstPage();
+
+    expect(element('.empty-state').textContent).toContain('No requests match these filters');
+    expect(await pages.getRangeLabel()).toContain('of 3');
+    expect(store.setPage).toHaveBeenCalledExactlyOnceWith(1, 20);
+  });
+
+  it('paginatorPage_CallsSetPage', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 41 });
+    const pages = await paginator();
+
+    await pages.goToNextPage();
+    await pages.setPageSize(50);
+
+    expect(store.setPage.mock.calls).toEqual([
+      [2, 20],
+      [1, 50],
+    ]);
+  });
+
+  it('paginatorNext_DuringPendingDraft_ShowsFirstPage', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 41 });
+    const pages = await paginator();
+    // Pending text sends the user to page 1 of the new results: the store's page stays 1, in a new query.
+    store.setPage.mockImplementation(() => store.query.set({ ...DEFAULT_QUERY, search: 'acme' }));
+
+    await pages.goToNextPage();
+    await fixture.whenStable();
+
+    expect(store.setPage).toHaveBeenCalledExactlyOnceWith(2, 20);
+    expect(await pages.getRangeLabel()).toBe('1 – 20 of 41');
+  });
+
+  it('render_PageSizeNotInOptions_ShowsItAsCurrentSize', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 41, query: { pageSize: 15 } });
+    const pages = await paginator();
+
+    expect(await pages.getPageSize()).toBe(15);
+    expect(await pages.getRangeLabel()).toBe('1 – 15 of 41');
+  });
+
+  it('childOutputs_Emit_CallStoreActions', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 1 });
+    const bar = fixture.debugElement.query(By.directive(RequestsFilterBarComponent))
+      .componentInstance as RequestsFilterBarComponent;
+    const table = fixture.debugElement.query(By.directive(RequestsTableComponent))
+      .componentInstance as RequestsTableComponent;
+
+    bar.searchDraftChange.emit('acme ');
+    bar.organizationDraftChange.emit('glob');
+    bar.textSubmit.emit();
+    bar.filtersChange.emit({ priority: ['High'] });
+    bar.assigneeAdd.emit('dana');
+    bar.assigneeRemove.emit('ann');
+    bar.clear.emit();
+    table.sortToggle.emit('title');
+    table.sortReset.emit();
+
+    expect(store.setSearchDraft).toHaveBeenCalledExactlyOnceWith('acme ');
+    expect(store.setOrganizationDraft).toHaveBeenCalledExactlyOnceWith('glob');
+    expect(store.submitText).toHaveBeenCalledOnce();
+    expect(store.setFilters).toHaveBeenCalledExactlyOnceWith({ priority: ['High'] });
+    expect(store.addAssignee).toHaveBeenCalledExactlyOnceWith('dana');
+    expect(store.removeAssignee).toHaveBeenCalledExactlyOnceWith('ann');
+    expect(store.clearFilters).toHaveBeenCalledOnce();
+    expect(store.toggleSort).toHaveBeenCalledExactlyOnceWith('title');
+    expect(store.resetSort).toHaveBeenCalledOnce();
+  });
+});
+
+describe('RequestsListComponent on its route', () => {
+  class FakeRequestsApi {
+    readonly queries: RequestQuery[] = [];
+
+    getPaged(query: RequestQuery): Observable<PagedResult<RequestDto>> {
+      this.queries.push(query);
+      return of({ items: [ROW], page: query.page, pageSize: query.pageSize, totalCount: 1 });
+    }
+  }
+
+  it('navigate_InvalidUrl_RewritesUrlAndLoadsOnce', async () => {
+    const api = new FakeRequestsApi();
+    TestBed.configureTestingModule({
+      providers: [provideRouter(routes), { provide: RequestsApiService, useValue: api }],
+    });
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/requests?page=abc&status=New', RequestsListComponent);
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/requests?status=New');
+    expect(api.queries).toEqual([{ ...DEFAULT_QUERY, status: ['New'] }]);
+  });
+});

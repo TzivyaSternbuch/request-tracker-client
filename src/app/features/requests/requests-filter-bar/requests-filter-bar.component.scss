@@ -1,0 +1,15 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 12px;
+}
+
+mat-form-field {
+  width: 180px;
+}
+
+mat-form-field.text,
+mat-form-field.assignees {
+  width: 240px;
+}
