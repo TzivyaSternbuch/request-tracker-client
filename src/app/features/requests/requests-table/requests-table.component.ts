@@ -8,48 +8,41 @@ import { RequestSortField, SortLevel } from '../../../core/models/request-query.
 interface Column {
   field: RequestSortField;
   label: string;
-  /** Name used in the accessible label; the visible label may carry a "(UTC)" suffix. */
-  name: string;
   value: (row: RequestDto) => string | number;
   kind: 'text' | 'date';
 }
 
 const COLUMNS: readonly Column[] = [
-  { field: 'id', label: 'Id', name: 'Id', value: (r) => r.id, kind: 'text' },
-  { field: 'title', label: 'Title', name: 'Title', value: (r) => r.title, kind: 'text' },
+  { field: 'id', label: 'Id', value: (r) => r.id, kind: 'text' },
+  { field: 'title', label: 'Title', value: (r) => r.title, kind: 'text' },
   {
     field: 'organizationName',
     label: 'Organization',
-    name: 'Organization',
     value: (r) => r.organizationName,
     kind: 'text',
   },
-  { field: 'status', label: 'Status', name: 'Status', value: (r) => r.status, kind: 'text' },
+  { field: 'status', label: 'Status', value: (r) => r.status, kind: 'text' },
   {
     field: 'priority',
     label: 'Priority',
-    name: 'Priority',
     value: (r) => r.priority,
     kind: 'text',
   },
   {
     field: 'assignedTo',
     label: 'Assignee',
-    name: 'Assignee',
     value: (r) => r.assignedTo,
     kind: 'text',
   },
   {
     field: 'createdAt',
     label: 'Created (UTC)',
-    name: 'Created',
     value: (r) => r.createdAt,
     kind: 'date',
   },
   {
     field: 'updatedAt',
     label: 'Updated (UTC)',
-    name: 'Updated',
     value: (r) => r.updatedAt,
     kind: 'date',
   },
@@ -160,10 +153,10 @@ export class RequestsTableComponent {
 
   protected ariaLabel(column: Column): string {
     const level = this.levelOf(column.field);
-    if (!level) return `${column.name}, not sorted`;
+    if (!level) return `${column.label}, not sorted`;
     const direction = level.direction === 'asc' ? 'ascending' : 'descending';
     return this.sort().length > 1
-      ? `${column.name}, sorted ${direction}, level ${level.number}`
-      : `${column.name}, sorted ${direction}`;
+      ? `${column.label}, sorted ${direction}, level ${level.number}`
+      : `${column.label}, sorted ${direction}`;
   }
 }

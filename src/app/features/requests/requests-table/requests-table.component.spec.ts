@@ -116,6 +116,15 @@ describe('RequestsTableComponent', () => {
     );
   });
 
+  it('render_DateColumns_AriaLabelContainsVisibleLabel', async () => {
+    await render([aRequest()], [{ field: 'createdAt', direction: 'desc' }]);
+
+    const created = headerCell('Created').querySelector('button')?.getAttribute('aria-label');
+    const updated = headerCell('Updated').querySelector('button')?.getAttribute('aria-label');
+    expect(created).toBe('Created (UTC), sorted descending');
+    expect(updated).toBe('Updated (UTC), not sorted');
+  });
+
   it('render_WithSort_HidesDefaultNoteAndEnablesReset', async () => {
     await render([aRequest()], [{ field: 'id', direction: 'asc' }]);
 
