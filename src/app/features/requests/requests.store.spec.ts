@@ -5,7 +5,11 @@ import { provideRouter, Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 import { RequestsApiService } from '../../core/api/requests-api.service';
 import { PagedResult } from '../../core/models/paged-result.model';
-import { DEFAULT_QUERY, RequestQuery } from '../../core/models/request-query.model';
+import {
+  DEFAULT_QUERY,
+  MAX_FILTER_VALUES,
+  RequestQuery,
+} from '../../core/models/request-query.model';
 import { RequestDto } from '../../core/models/request.model';
 import { RequestsStore } from './requests.store';
 
@@ -127,13 +131,9 @@ describe('RequestsStore', () => {
 
     store.setPage(4, 50);
     await settle();
-    const afterSizeChange = api.lastCall().query;
-    store.setPage(4, 50);
-    await settle();
 
-    expect(afterSizeChange).toEqual({ ...DEFAULT_QUERY, page: 1, pageSize: 50 });
-    expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, page: 4, pageSize: 50 });
-    expect(router.url).toBe('/?page=4&pageSize=50');
+    expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, page: 1, pageSize: 50 });
+    expect(router.url).toBe('/?pageSize=50');
   });
 
   it('setPage_SamePageSize_KeepsRequestedPage', async () => {
@@ -169,7 +169,7 @@ describe('RequestsStore', () => {
     api.lastCall().response.next({ items: [ROW], page: 1, pageSize: 20, totalCount: 1 });
 
     expect(errorStatus).toBe('error');
-    expect(errorMessage).toEqual(expect.any(String));
+    expect(errorMessage).toBe("Can't reach the server. Check your connection and try again.");
     expect(api.calls.length).toBe(2);
     expect(api.calls[1].query).toEqual(api.calls[0].query);
     expect(store.status()).toBe('success');
@@ -180,7 +180,7 @@ describe('RequestsStore', () => {
     const store = await createStore();
     api.lastCall().response.error(new HttpErrorResponse({ status: 500 }));
 
-    store.setFilters({ assignedTo: ['dana'] });
+    store.addAssignee('dana');
     await settle();
     api.lastCall().response.next({ items: [ROW], page: 1, pageSize: 20, totalCount: 1 });
 
@@ -205,6 +205,66 @@ describe('RequestsStore', () => {
     });
   });
 
+  it('setFilters_TwoActionsBeforeNavigationSettles_KeepsBoth', async () => {
+    const store = await createStore();
+
+    store.setFilters({ status: ['New'] });
+    store.toggleSort('title');
+    await settle();
+
+    expect(router.url).toBe('/?status=New&sort=title:asc');
+    expect(store.query()).toEqual({
+      ...DEFAULT_QUERY,
+      status: ['New'],
+      sort: [{ field: 'title', direction: 'asc' }],
+    });
+  });
+
+  it('addAssignee_Name_AddsTrimmedNameOnPageOne', async () => {
+    const store = await createStore('/?assignedTo=ann&page=3');
+
+    store.addAssignee('  dana ');
+    await settle();
+
+    expect(router.url).toBe('/?assignedTo=ann&assignedTo=dana');
+    expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, assignedTo: ['ann', 'dana'] });
+  });
+
+  it('addAssignee_BlankOrDuplicateOrAtLimit_DoesNotNavigate', async () => {
+    const full = Array.from({ length: MAX_FILTER_VALUES }, (_, i) => `assignedTo=user${i}`);
+    const store = await createStore(`/?${full.join('&')}&page=3`);
+    const urlBefore = router.url;
+
+    store.addAssignee('   ');
+    store.addAssignee('user0');
+    store.addAssignee('dana');
+    await settle();
+
+    expect(router.url).toBe(urlBefore);
+    expect(api.calls.length).toBe(1);
+  });
+
+  it('addAssignee_TwoAddsBeforeNavigationSettles_KeepsBoth', async () => {
+    const store = await createStore();
+
+    store.addAssignee('ann');
+    store.addAssignee('dana');
+    await settle();
+
+    expect(store.query()).toEqual({ ...DEFAULT_QUERY, assignedTo: ['ann', 'dana'] });
+  });
+
+  it('removeAssignee_TwoRemovesBeforeNavigationSettles_RemovesBoth', async () => {
+    const store = await createStore('/?assignedTo=ann&assignedTo=dana&assignedTo=lee&page=3');
+
+    store.removeAssignee('ann');
+    store.removeAssignee('dana');
+    await settle();
+
+    expect(router.url).toBe('/?assignedTo=lee');
+    expect(store.query()).toEqual({ ...DEFAULT_QUERY, assignedTo: ['lee'] });
+  });
+
   it('sameQuery_NavigatedAgain_DoesNotReload', async () => {
     await createStore('/?status=New');
 
@@ -213,5 +273,168 @@ describe('RequestsStore', () => {
     await settle();
 
     expect(api.calls.length).toBe(1);
+  });
+
+  describe('text drafts', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function advance(ms: number): Promise<void> {
+      await vi.advanceTimersByTimeAsync(ms);
+      await settle();
+    }
+
+    it('setSearchDraft_Typing_NavigatesOnceAfter300ms', async () => {
+      const store = await createStore();
+
+      store.setSearchDraft('a');
+      await advance(100);
+      store.setSearchDraft('ac');
+      await advance(100);
+      store.setSearchDraft('acm');
+      await advance(299);
+      const callsBeforeDebounce = api.calls.length;
+      await advance(1);
+
+      expect(callsBeforeDebounce).toBe(1);
+      expect(api.calls.length).toBe(2);
+      expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, search: 'acm' });
+    });
+
+    it('setOrganizationDraft_Typing_IsDebounced', async () => {
+      const store = await createStore();
+
+      store.setOrganizationDraft('a');
+      await advance(100);
+      store.setOrganizationDraft('ac');
+      await advance(100);
+      store.setOrganizationDraft('acm');
+      await advance(299);
+      const callsBeforeDebounce = api.calls.length;
+      await advance(1);
+
+      expect(callsBeforeDebounce).toBe(1);
+      expect(api.calls.length).toBe(2);
+      expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, organizationName: 'acm' });
+    });
+
+    it('setFilters_DuringDebounce_SendsPendingTextOnce', async () => {
+      const store = await createStore();
+
+      store.setSearchDraft('ac');
+      await advance(100);
+      store.setFilters({ status: ['New'] });
+      await settle();
+      const callsAfterFilter = api.calls.length;
+      await advance(400);
+
+      expect(callsAfterFilter).toBe(2);
+      expect(api.calls.length).toBe(2);
+      expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, search: 'ac', status: ['New'] });
+    });
+
+    it('setPage_DuringDebounce_ResetsToPageOne', async () => {
+      const store = await createStore();
+
+      store.setSearchDraft('ac');
+      await advance(100);
+      store.setPage(4, 20);
+      await settle();
+      await advance(400);
+
+      expect(api.calls.length).toBe(2);
+      expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, search: 'ac', page: 1 });
+    });
+
+    it('submitText_PendingDraft_SendsImmediately', async () => {
+      const store = await createStore();
+
+      store.setSearchDraft('acme');
+      store.submitText();
+      await settle();
+
+      expect(api.calls.length).toBe(2);
+      expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, search: 'acme' });
+      expect(router.url).toBe('/?search=acme');
+    });
+
+    it('submitText_UnchangedQuery_Reloads', async () => {
+      const store = await createStore('/?search=acme');
+
+      store.submitText();
+      await settle();
+
+      expect(api.calls.length).toBe(2);
+      expect(api.calls[1].query).toEqual(api.calls[0].query);
+    });
+
+    it('setSearchDraft_TrailingSpace_DraftKeepsSpaceAndQueryTrims', async () => {
+      const store = await createStore();
+
+      store.setSearchDraft('acme ');
+      await advance(300);
+
+      expect(store.searchDraft()).toBe('acme ');
+      expect(store.query().search).toBe('acme');
+      expect(router.url).toBe('/?search=acme');
+    });
+
+    it('setSearchDraft_ResponseArrivesWhileTyping_DraftUnchanged', async () => {
+      const store = await createStore();
+      store.setSearchDraft('ac');
+      // Synchronous: the debounce fires and the store navigates to `?search=ac`, but the navigation hasn't settled.
+      vi.advanceTimersByTime(300);
+
+      // The URL update and its response land after the next keystroke.
+      store.setSearchDraft('acme ');
+      await settle();
+      api.lastCall().response.next({ items: [ROW], page: 1, pageSize: 20, totalCount: 1 });
+      await settle();
+
+      expect(router.url).toBe('/?search=ac');
+      expect(store.status()).toBe('success');
+      expect(store.searchDraft()).toBe('acme ');
+    });
+
+    it('outsideNavigation_UrlChanges_ResetsDrafts', async () => {
+      const store = await createStore();
+      store.setSearchDraft('alpha');
+      store.setOrganizationDraft('Ac');
+      await advance(300);
+
+      await router.navigateByUrl('/?search=beta');
+      await settle();
+
+      expect(store.searchDraft()).toBe('beta');
+      expect(store.organizationDraft()).toBe('');
+      expect(store.query()).toEqual({ ...DEFAULT_QUERY, search: 'beta' });
+    });
+
+    it('clearFilters_WithDrafts_ClearsDraftsAndFilters', async () => {
+      const store = await createStore(
+        '/?search=acme&organizationName=Ac&status=New&page=3&pageSize=50&sort=title:asc',
+      );
+      store.setSearchDraft('acme x');
+
+      store.clearFilters();
+      await settle();
+      const callsAfterClear = api.calls.length;
+      await advance(400);
+
+      expect(store.searchDraft()).toBe('');
+      expect(store.organizationDraft()).toBe('');
+      expect(router.url).toBe('/?pageSize=50&sort=title:asc');
+      expect(store.query()).toEqual({
+        ...DEFAULT_QUERY,
+        pageSize: 50,
+        sort: [{ field: 'title', direction: 'asc' }],
+      });
+      expect(api.calls.length).toBe(callsAfterClear);
+    });
   });
 });
