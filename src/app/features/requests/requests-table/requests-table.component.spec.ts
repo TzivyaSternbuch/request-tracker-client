@@ -1,0 +1,162 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RequestDto } from '../../../core/models/request.model';
+import { RequestSortField, SortLevel } from '../../../core/models/request-query.model';
+import { RequestsTableComponent } from './requests-table.component';
+
+function aRequest(overrides: Partial<RequestDto> = {}): RequestDto {
+  return {
+    id: 7,
+    title: 'Fix the roof',
+    organizationName: 'Acme',
+    status: 'New',
+    priority: 'High',
+    assignedTo: 'dana',
+    createdAt: '2026-01-31T23:59:00+00:00',
+    updatedAt: '2026-02-01T08:05:00+00:00',
+    version: 'AAAAAAAAB9E=',
+    ...overrides,
+  };
+}
+
+describe('RequestsTableComponent', () => {
+  let fixture: ComponentFixture<RequestsTableComponent>;
+  let root: HTMLElement;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [RequestsTableComponent] });
+    fixture = TestBed.createComponent(RequestsTableComponent);
+    root = fixture.nativeElement as HTMLElement;
+  });
+
+  async function render(items: RequestDto[], sort: SortLevel[], loading = false) {
+    fixture.componentRef.setInput('items', items);
+    fixture.componentRef.setInput('sort', sort);
+    fixture.componentRef.setInput('loading', loading);
+    await fixture.whenStable();
+  }
+
+  function headerCell(label: string): HTMLElement {
+    const cells = Array.from(root.querySelectorAll<HTMLElement>('th'));
+    const cell = cells.find((th) => th.textContent?.trim().startsWith(label));
+    if (!cell) throw new Error(`No header "${label}"`);
+    return cell;
+  }
+
+  it('render_Items_ShowsColumnsInOrder', async () => {
+    await render([aRequest()], []);
+
+    const headers = Array.from(root.querySelectorAll('th')).map((th) => th.textContent?.trim());
+    const cells = Array.from(root.querySelectorAll('tbody tr:first-child td')).map((td) =>
+      td.textContent?.trim(),
+    );
+    expect(headers).toEqual([
+      'Id',
+      'Title',
+      'Organization',
+      'Status',
+      'Priority',
+      'Assignee',
+      'Created (UTC)',
+      'Updated (UTC)',
+    ]);
+    expect(cells).toEqual([
+      '7',
+      'Fix the roof',
+      'Acme',
+      'New',
+      'High',
+      'dana',
+      '2026-01-31 23:59',
+      '2026-02-01 08:05',
+    ]);
+  });
+
+  it('render_TwoSortLevels_ShowsArrowsAndNumbers', async () => {
+    await render(
+      [aRequest()],
+      [
+        { field: 'priority', direction: 'desc' },
+        { field: 'title', direction: 'asc' },
+      ],
+    );
+
+    const priority = headerCell('Priority');
+    const title = headerCell('Title');
+    expect(priority.textContent).toContain('↓');
+    expect(priority.textContent).toContain('1');
+    expect(title.textContent).toContain('↑');
+    expect(title.textContent).toContain('2');
+    expect(priority.getAttribute('aria-sort')).toBe('descending');
+    expect(priority.querySelector('button')?.getAttribute('aria-label')).toBe(
+      'Priority, sorted descending, level 1',
+    );
+  });
+
+  it('render_OneSortLevel_HidesNumber', async () => {
+    await render([aRequest()], [{ field: 'title', direction: 'asc' }]);
+
+    const title = headerCell('Title');
+    expect(title.textContent).toContain('↑');
+    expect(title.textContent).not.toMatch(/\d/);
+    expect(title.querySelector('button')?.getAttribute('aria-label')).toBe(
+      'Title, sorted ascending',
+    );
+  });
+
+  it('render_NoSort_ShowsDefaultNoteAndDisablesReset', async () => {
+    await render([aRequest()], []);
+
+    const reset = Array.from(root.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Reset sorting'),
+    );
+    expect(root.textContent).toContain('Default order: newest first');
+    expect(reset?.disabled).toBe(true);
+    expect(headerCell('Title').querySelector('button')?.getAttribute('aria-label')).toBe(
+      'Title, not sorted',
+    );
+  });
+
+  it('render_WithSort_HidesDefaultNoteAndEnablesReset', async () => {
+    await render([aRequest()], [{ field: 'id', direction: 'asc' }]);
+
+    const reset = Array.from(root.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Reset sorting'),
+    );
+    expect(root.textContent).not.toContain('Default order');
+    expect(reset?.disabled).toBe(false);
+  });
+
+  it('headerClick_Column_EmitsSortToggleWithField', async () => {
+    await render([aRequest()], []);
+    const emitted: RequestSortField[] = [];
+    fixture.componentInstance.sortToggle.subscribe((field) => emitted.push(field));
+
+    headerCell('Organization').querySelector('button')?.click();
+
+    expect(emitted).toEqual(['organizationName']);
+  });
+
+  it('resetClick_EmitsSortReset', async () => {
+    await render([aRequest()], [{ field: 'id', direction: 'asc' }]);
+    let resets = 0;
+    fixture.componentInstance.sortReset.subscribe(() => resets++);
+
+    Array.from(root.querySelectorAll('button'))
+      .find((b) => b.textContent?.includes('Reset sorting'))
+      ?.click();
+
+    expect(resets).toBe(1);
+  });
+
+  it('render_Loading_DimsRows', async () => {
+    await render([aRequest()], [], true);
+
+    expect(root.querySelector('table')?.classList).toContain('loading');
+  });
+
+  it('render_NotLoading_DoesNotDimRows', async () => {
+    await render([aRequest()], [], false);
+
+    expect(root.querySelector('table')?.classList).not.toContain('loading');
+  });
+});
