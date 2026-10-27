@@ -1,5 +1,4 @@
 .details {
-  padding: 20px 24px 24px;
   color: var(--app-text);
 }
 
@@ -7,6 +6,8 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  padding: 16px 20px 14px 24px;
+  border-bottom: 1px solid var(--app-divider);
 }
 
 .heading {
@@ -16,42 +17,106 @@
 
 .number {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--app-text-muted);
 }
 
+// The pill and the pencil follow the title.
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 .title {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 20px;
   line-height: 26px;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
-// The panel is positioned against the status area, under the pencil.
-.status-area {
-  position: relative;
-  display: flex;
+.icon-button {
+  all: unset;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding-top: 2px;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--app-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--app-row-hover);
+    color: var(--app-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--app-link);
+  }
+}
+
+// The panel hangs under the pencil.
+.pencil-anchor {
+  position: relative;
+  display: inline-flex;
 }
 
 .panel {
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: calc(100% + 8px);
+  left: 0;
   z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 280px;
+  width: 260px;
   padding: 16px;
   background: var(--app-card-background);
   border: 1px solid var(--app-card-border);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 12%);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 14%);
+
+  h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--app-text-muted);
+  }
+
+  select,
+  input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--app-text);
+    background: var(--app-card-background);
+    border: 1px solid var(--app-control-border);
+    border-radius: 6px;
+
+    &:focus-visible {
+      outline: 2px solid var(--app-link);
+      outline-offset: -1px;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
 }
 
 .actions {
@@ -67,12 +132,26 @@
 }
 
 .conflict {
-  margin: 12px 0 0;
-  padding: 8px 12px;
-  border-radius: 6px;
+  margin: 0;
+  padding: 8px 24px;
   font-size: 13px;
   background: var(--app-tone-amber-background);
   color: var(--app-tone-amber-text);
+}
+
+// Tall enough that the status panel fits under the header even with the short details column.
+.body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  min-height: 340px;
+}
+
+.main {
+  padding: 20px 24px;
+}
+
+.history-column {
+  border-left: 1px solid var(--app-divider);
 }
 
 .message {
@@ -80,7 +159,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  padding: 24px 0 8px;
 
   p {
     margin: 0;
@@ -88,55 +166,52 @@
 }
 
 .fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 24px;
-  margin: 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
 
   &.loading {
     opacity: 0.5;
   }
-
-  dt {
-    font-size: 12px;
-    color: var(--app-text-muted);
-  }
-
-  dd {
-    margin: 4px 0 0;
-    overflow-wrap: anywhere;
-  }
 }
 
-.assignee {
-  display: flex;
+.field {
+  display: grid;
+  grid-template-columns: 96px 1fr;
   align-items: center;
   gap: 8px;
+  font-size: 13px;
 }
 
-.avatar {
-  flex: none;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  font-size: 11px;
-  line-height: 26px;
-  text-align: center;
-  font-weight: 600;
-  background: var(--app-tone-gray-background);
-  color: var(--app-tone-gray-text);
+dt {
+  color: var(--app-text-muted);
 }
 
-@media (max-width: 600px) {
-  .details {
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .header {
     padding: 16px;
   }
 
-  .fields {
+  .body {
     grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .main {
+    padding: 16px;
+  }
+
+  .history-column {
+    display: none;
   }
 
   .panel {
-    width: min(280px, calc(100vw - 64px));
+    width: min(260px, calc(100vw - 64px));
   }
 }

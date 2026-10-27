@@ -1,14 +1,18 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActingAsService } from '../../../core/acting-as.service';
 import { REQUEST_STATUSES, RequestStatus } from '../../../core/models/request.model';
-import { initials } from '../../../shared/initials';
 import { StatusPillComponent } from '../../../shared/status-pill/status-pill.component';
 import { valueLabel } from '../../../shared/value-label';
 import { RequestsStore } from '../requests.store';
@@ -24,14 +28,7 @@ export interface RequestDetailsData {
  */
 @Component({
   selector: 'app-request-details',
-  imports: [
-    DatePipe,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatProgressBarModule,
-    StatusPillComponent,
-  ],
+  imports: [DatePipe, MatButtonModule, MatProgressBarModule, StatusPillComponent],
   providers: [RequestDetailsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './request-details.component.html',
@@ -46,7 +43,6 @@ export class RequestDetailsComponent {
 
   protected readonly statuses = REQUEST_STATUSES;
   protected readonly valueLabel = valueLabel;
-  protected readonly initials = initials;
 
   protected readonly panelOpen = signal(false);
   protected readonly draftStatus = signal<RequestStatus | ''>('');
@@ -64,6 +60,8 @@ export class RequestDetailsComponent {
   );
 
   constructor() {
+    // Esc and the backdrop would otherwise close the dialog mid-save and abort the request, leaving the list stale.
+    effect(() => (this.dialogRef.disableClose = this.saving()));
     this.store.load(this.data.id);
     this.store.updated$.pipe(takeUntilDestroyed()).subscribe(() => {
       this.panelOpen.set(false);

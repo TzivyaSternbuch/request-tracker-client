@@ -43,7 +43,8 @@ export class RequestDetailsStore {
   readonly conflict = this.conflictSignal.asReadonly();
 
   /** Emits after a successful save and after a 409, so the list can reload to match. */
-  readonly updated$ = new Subject<void>();
+  private readonly updatedSubject = new Subject<void>();
+  readonly updated$ = this.updatedSubject.asObservable();
 
   constructor() {
     this.load$
@@ -74,6 +75,8 @@ export class RequestDetailsStore {
   }
 
   load(id: number): void {
+    // A different id must not show the previous request's data; a reload of the same id keeps it on screen.
+    if (id !== this.currentId) this.requestSignal.set(null);
     this.currentId = id;
     this.reload();
   }
@@ -95,7 +98,7 @@ export class RequestDetailsStore {
         next: (updated) => {
           this.requestSignal.set(updated);
           this.saveStateSignal.set('idle');
-          this.updated$.next();
+          this.updatedSubject.next();
         },
         error: (error: unknown) => this.onSaveError(error),
       });
@@ -118,7 +121,7 @@ export class RequestDetailsStore {
     } else if (httpStatus === 409) {
       this.conflictSignal.set(true);
       this.reload();
-      this.updated$.next();
+      this.updatedSubject.next();
     } else {
       this.saveErrorSignal.set(problemMessage(error));
     }
