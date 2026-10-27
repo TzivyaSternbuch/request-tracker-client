@@ -7,7 +7,8 @@
       <button mat-flat-button type="button" (click)="retry.emit()">Retry</button>
     </div>
   } @else if (stats() === null) {
-    <div class="cards" aria-busy="true" aria-label="Loading overview">
+    <div class="cards" aria-busy="true">
+      <span class="sr-only" role="status">Loading overview</span>
       @for (lines of placeholderCards; track $index) {
         <div class="card">
           @for (line of lines; track line) {
@@ -48,7 +49,7 @@
             @for (slice of statusSlices(); track slice.label) {
               <li>
                 <span class="dot tone--{{ slice.tone }}"></span>
-                <span class="legend-label">{{ slice.label }}</span>
+                <span>{{ slice.label }}</span>
                 <span class="count">{{ slice.count | number }}</span>
               </li>
             }

@@ -34,26 +34,21 @@
   text-align: right;
 }
 
-// Same hues as the status pills in the table, in lighter shades: the pill text colors are too dark for a ring.
-$chart-blue: #6ea8f7;
-$chart-amber: #f6c453;
-$chart-gray: #c3c9d2;
-$chart-green: #6fcf8e;
-
-.tone--blue {
-  color: $chart-blue;
+// The chart tokens are lighter shades of the status pills' hues (styles.scss), so the ring follows the table.
+@each $tone in 'blue', 'amber', 'gray', 'green' {
+  .tone--#{$tone} {
+    color: var(--app-tone-#{$tone}-chart);
+  }
 }
 
-.tone--amber {
-  color: $chart-amber;
-}
-
-.tone--gray {
-  color: $chart-gray;
-}
-
-.tone--green {
-  color: $chart-green;
+// Visible to screen readers only.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .status {
@@ -157,7 +152,7 @@ $chart-green: #6fcf8e;
   i {
     display: block;
     height: 100%;
-    background: $chart-blue;
+    background: var(--app-tone-blue-chart);
   }
 }
 

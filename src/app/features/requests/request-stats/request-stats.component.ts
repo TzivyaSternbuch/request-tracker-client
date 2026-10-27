@@ -1,11 +1,11 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { LoadStatus } from '../../../core/models/load-status.model';
 import { RequestStats } from '../../../core/models/request-stats.model';
 import { REQUEST_STATUSES, RequestStatus } from '../../../core/models/request.model';
 import { initials } from '../../../shared/initials';
 import { valueLabel } from '../../../shared/value-label';
-import { LoadStatus } from '../requests.store';
 
 const TOP_ASSIGNEES = 3;
 

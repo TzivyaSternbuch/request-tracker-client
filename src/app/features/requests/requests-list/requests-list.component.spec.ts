@@ -9,13 +9,14 @@ import { Observable, of } from 'rxjs';
 import { routes } from '../../../app.routes';
 import { RequestsApiService } from '../../../core/api/requests-api.service';
 import { PagedResult } from '../../../core/models/paged-result.model';
+import { LoadStatus } from '../../../core/models/load-status.model';
 import { DEFAULT_QUERY, RequestQuery } from '../../../core/models/request-query.model';
 import { RequestStats } from '../../../core/models/request-stats.model';
 import { RequestDto } from '../../../core/models/request.model';
 import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsFilterBarComponent } from '../requests-filter-bar/requests-filter-bar.component';
 import { RequestsTableComponent } from '../requests-table/requests-table.component';
-import { LoadStatus, RequestsStore } from '../requests.store';
+import { RequestsStore } from '../requests.store';
 import { RequestsListComponent } from './requests-list.component';
 
 const ROW: RequestDto = {

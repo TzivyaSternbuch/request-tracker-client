@@ -3,8 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, catchError, map, of, startWith, switchMap } from 'rxjs';
 import { problemMessage } from '../../../core/api/problem-message';
 import { RequestsApiService } from '../../../core/api/requests-api.service';
+import { LoadStatus } from '../../../core/models/load-status.model';
 import { RequestStats } from '../../../core/models/request-stats.model';
-import { LoadStatus } from '../requests.store';
 
 type LoadResult = { ok: true; stats: RequestStats } | { ok: false; message: string };
 

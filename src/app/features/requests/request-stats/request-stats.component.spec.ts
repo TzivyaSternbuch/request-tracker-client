@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { LoadStatus } from '../../../core/models/load-status.model';
 import { RequestStats } from '../../../core/models/request-stats.model';
-import { LoadStatus } from '../requests.store';
 import { RequestStatsComponent } from './request-stats.component';
 
 const STATS: RequestStats = {

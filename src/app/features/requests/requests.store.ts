@@ -15,6 +15,7 @@ import {
 } from 'rxjs';
 import { problemMessage } from '../../core/api/problem-message';
 import { RequestsApiService } from '../../core/api/requests-api.service';
+import { LoadStatus } from '../../core/models/load-status.model';
 import { PagedResult } from '../../core/models/paged-result.model';
 import {
   DEFAULT_QUERY,
@@ -27,8 +28,6 @@ import {
 import { RequestDto } from '../../core/models/request.model';
 import { fromQueryParams, queryKey, toQueryParams } from './request-query-url';
 import { toggleSortLevel } from './sort-levels';
-
-export type LoadStatus = 'idle' | 'loading' | 'success' | 'error';
 
 type LoadResult = { ok: true; page: PagedResult<RequestDto> } | { ok: false; message: string };
 
