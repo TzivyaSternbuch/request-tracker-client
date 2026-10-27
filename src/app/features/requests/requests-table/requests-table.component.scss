@@ -13,6 +13,11 @@ td {
 }
 
 // Fixed widths for the short columns; Title and Organization share what is left, Title a little more.
+.select-cell {
+  width: 48px;
+  padding-right: 0;
+}
+
 .mat-column-id {
   width: 64px;
 }
@@ -52,6 +57,10 @@ table.loading tbody {
 
 .row:hover {
   background: var(--app-row-hover);
+}
+
+.row.selected {
+  background: var(--app-chip-active-background);
 }
 
 // The header label is a button: it darkens on hover, shows a faint ↕ hint when unsorted, and turns the accent

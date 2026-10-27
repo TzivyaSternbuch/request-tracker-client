@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { BulkUpdateStatusRequest, BulkUpdateStatusResult } from '../models/bulk-update.model';
 import { PagedResult } from '../models/paged-result.model';
 import { RequestQuery } from '../models/request-query.model';
 import { RequestStats } from '../models/request-stats.model';
@@ -21,6 +22,10 @@ export class RequestsApiService {
 
   updateStatus(id: number, body: UpdateStatusRequest): Observable<RequestDto> {
     return this.http.patch<RequestDto>(`/api/requests/${id}/status`, body);
+  }
+
+  bulkUpdateStatus(body: BulkUpdateStatusRequest): Observable<BulkUpdateStatusResult> {
+    return this.http.patch<BulkUpdateStatusResult>('/api/requests/bulk-status', body);
   }
 
   getHistory(

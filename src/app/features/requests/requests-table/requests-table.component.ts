@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTableModule } from '@angular/material/table';
 import { Router, RouterLink } from '@angular/router';
 import { RequestDto } from '../../../core/models/request.model';
@@ -26,7 +27,7 @@ const COLUMNS: readonly Column[] = [
 
 @Component({
   selector: 'app-requests-table',
-  imports: [DatePipe, MatTableModule, RouterLink, StatusPillComponent],
+  imports: [DatePipe, MatCheckboxModule, MatTableModule, RouterLink, StatusPillComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './requests-table.component.html',
   styleUrl: './requests-table.component.scss',
@@ -35,13 +36,17 @@ export class RequestsTableComponent {
   readonly items = input.required<RequestDto[]>();
   readonly sort = input.required<SortLevel[]>();
   readonly loading = input(false);
+  readonly selectedIds = input<ReadonlySet<number>>(new Set());
+  readonly allSelected = input(false);
 
   readonly sortToggle = output<RequestSortField>();
+  readonly rowToggle = output<number>();
+  readonly allToggle = output<void>();
 
   private readonly router = inject(Router);
 
   protected readonly columns = COLUMNS;
-  protected readonly fields = COLUMNS.map((column) => column.field);
+  protected readonly fields = ['select', ...COLUMNS.map((column) => column.field)];
   protected readonly initials = initials;
 
   private readonly levels = computed(
@@ -49,9 +54,9 @@ export class RequestsTableComponent {
       new Map(this.sort().map((level, index) => [level.field, { ...level, number: index + 1 }])),
   );
 
-  /** The title link handles its own click (middle-click and new tab keep working); the rest of the row opens it too. */
+  /** The title link handles its own click (middle-click and new tab keep working); the rest of the row opens it too, except the checkbox cell. */
   protected openRow(event: MouseEvent, row: RequestDto): void {
-    if ((event.target as HTMLElement).closest('a')) return;
+    if ((event.target as HTMLElement).closest('a, .select-cell')) return;
     void this.router.navigate(['/requests', row.id], { queryParamsHandling: 'preserve' });
   }
 

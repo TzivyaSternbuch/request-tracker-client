@@ -36,6 +36,9 @@
     </div>
   </app-requests-filter-bar>
 
+  <!-- Outside the error branch: the result of an update that went through must survive a failed reload. -->
+  <app-bulk-update-result />
+
   @if (store.status() === 'error') {
     <div class="message" role="alert">
       <p>{{ store.errorMessage() }}</p>
@@ -49,6 +52,10 @@
       }
     </div>
 
+    @if (bulkStore.count() > 0) {
+      <app-bulk-update-bar />
+    }
+
     @if (empty()) {
       <div class="message empty-state">
         <p>No requests match these filters</p>
@@ -61,7 +68,11 @@
         [items]="store.items()"
         [sort]="store.query().sort"
         [loading]="loading()"
+        [selectedIds]="bulkStore.selectedIds()"
+        [allSelected]="bulkStore.allSelected()"
         (sortToggle)="store.toggleSort($event)"
+        (rowToggle)="bulkStore.toggle($event)"
+        (allToggle)="bulkStore.toggleAll()"
       />
     }
 

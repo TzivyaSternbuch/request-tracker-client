@@ -87,7 +87,8 @@
     font-weight: 600;
   }
 
-  label {
+  label,
+  .labelled {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -95,7 +96,6 @@
     color: var(--app-text-muted);
   }
 
-  select,
   input {
     box-sizing: border-box;
     width: 100%;

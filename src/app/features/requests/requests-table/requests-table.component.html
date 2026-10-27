@@ -1,4 +1,21 @@
 <table mat-table [dataSource]="items()" [class.loading]="loading()">
+  <ng-container matColumnDef="select">
+    <th mat-header-cell *matHeaderCellDef class="select-cell">
+      <mat-checkbox
+        aria-label="Select all requests on this page"
+        [checked]="allSelected()"
+        [indeterminate]="selectedIds().size > 0 && !allSelected()"
+        (change)="allToggle.emit()"
+      />
+    </th>
+    <td mat-cell *matCellDef="let row" class="select-cell">
+      <mat-checkbox
+        [attr.aria-label]="'Select request ' + row.id"
+        [checked]="selectedIds().has(row.id)"
+        (change)="rowToggle.emit(row.id)"
+      />
+    </td>
+  </ng-container>
   @for (column of columns; track column.field) {
     <ng-container [matColumnDef]="column.field">
       <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort(column.field)">
@@ -68,5 +85,11 @@
     </ng-container>
   }
   <tr mat-header-row class="header-row" *matHeaderRowDef="fields"></tr>
-  <tr mat-row class="row" *matRowDef="let row; columns: fields" (click)="openRow($event, row)"></tr>
+  <tr
+    mat-row
+    class="row"
+    [class.selected]="selectedIds().has(row.id)"
+    *matRowDef="let row; columns: fields"
+    (click)="openRow($event, row)"
+  ></tr>
 </table>

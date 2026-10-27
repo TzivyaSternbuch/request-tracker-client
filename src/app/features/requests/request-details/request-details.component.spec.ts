@@ -175,7 +175,11 @@ describe('RequestDetailsComponent', () => {
     await render();
     await openPanel();
 
-    store.request.set({ ...REQUEST, status: 'InProgress', allowedStatuses: ['Waiting', 'Completed'] });
+    store.request.set({
+      ...REQUEST,
+      status: 'InProgress',
+      allowedStatuses: ['Waiting', 'Completed'],
+    });
     await fixture.whenStable();
 
     expect(optionLabels()).toEqual(['', 'Waiting', 'Completed']);
@@ -187,7 +191,11 @@ describe('RequestDetailsComponent', () => {
     await openPanel();
     await chooseStatus('InProgress');
 
-    store.request.set({ ...REQUEST, status: 'InProgress', allowedStatuses: ['Waiting', 'Completed'] });
+    store.request.set({
+      ...REQUEST,
+      status: 'InProgress',
+      allowedStatuses: ['Waiting', 'Completed'],
+    });
     await fixture.whenStable();
 
     expect(button('Save changes').disabled).toBe(true);

@@ -31,17 +31,16 @@
                 >
                   <h3>Change status</h3>
 
-                  <label>
-                    <span>New status</span>
-                    <select [disabled]="saving()" (change)="onStatusChange($event)">
-                      <option value="" [selected]="draftStatus() === ''" disabled></option>
-                      @for (status of allowedStatuses(); track status) {
-                        <option [value]="status" [selected]="draftStatus() === status">
-                          {{ valueLabel(status) }}
-                        </option>
-                      }
-                    </select>
-                  </label>
+                  <div class="labelled">
+                    <span aria-hidden="true">New status</span>
+                    <app-status-select
+                      ariaLabel="New status"
+                      [statuses]="allowedStatuses()"
+                      [value]="draftStatus()"
+                      [disabled]="saving()"
+                      (valueChange)="draftStatus.set($event)"
+                    />
+                  </div>
 
                   <label>
                     <span>Changed by</span>
