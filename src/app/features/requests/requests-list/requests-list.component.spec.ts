@@ -58,8 +58,10 @@ describe('RequestsListComponent', () => {
 
   beforeEach(() => {
     store = new FakeRequestsStore();
+    // Replaces only the store, so the component's other providers (the paginator labels) stay real.
     TestBed.overrideComponent(RequestsListComponent, {
-      set: { providers: [{ provide: RequestsStore, useValue: store }] },
+      remove: { providers: [RequestsStore] },
+      add: { providers: [{ provide: RequestsStore, useValue: store }] },
     });
     fixture = TestBed.createComponent(RequestsListComponent);
     root = fixture.nativeElement as HTMLElement;
@@ -113,6 +115,40 @@ describe('RequestsListComponent', () => {
     expect(element('table').classList).not.toContain('loading');
     expect(root.querySelectorAll('tbody tr').length).toBe(1);
     expect(await (await paginator()).getRangeLabel()).toBe('1 – 20 of 41');
+  });
+
+  it('render_Success_ShowsTotalWithThousandsSeparator', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 100000 });
+
+    expect(element('.card-header').textContent).toContain('100,000 total');
+  });
+
+  it('render_FirstLoad_HidesTotal', async () => {
+    await render({ status: 'loading' });
+
+    expect(element('.card-header').textContent?.trim()).toBe('Requests');
+  });
+
+  it('render_LoadingAfterSuccess_KeepsLastTotal', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 41 });
+
+    await render({ status: 'loading', items: [ROW], totalCount: 41 });
+
+    expect(element('.card-header').textContent).toContain('41 total');
+  });
+
+  it('render_ErrorAfterSuccess_HidesTotal', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 41 });
+
+    await render({ status: 'error', items: [ROW], totalCount: 41, errorMessage: 'Server down' });
+
+    expect(element('.card-header').textContent?.trim()).toBe('Requests');
+  });
+
+  it('paginator_LargeTotal_ShowsThousandsSeparators', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 100000 });
+
+    expect(await (await paginator()).getRangeLabel()).toBe('1 – 20 of 100,000');
   });
 
   it('render_SuccessEmpty_ShowsEmptyStateWithClearFilters', async () => {

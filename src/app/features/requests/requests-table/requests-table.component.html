@@ -1,0 +1,72 @@
+<div class="sort-row">
+  <button mat-button type="button" [disabled]="sort().length === 0" (click)="sortReset.emit()">
+    Reset sorting
+  </button>
+  @if (sort().length === 0) {
+    <span class="default-note">Default order: newest first</span>
+  }
+</div>
+
+<table mat-table [dataSource]="items()" [class.loading]="loading()">
+  @for (column of columns; track column.field) {
+    <ng-container [matColumnDef]="column.field">
+      <th mat-header-cell *matHeaderCellDef [attr.aria-sort]="ariaSort(column.field)">
+        <button
+          type="button"
+          class="sort-button"
+          [attr.aria-label]="ariaLabel(column)"
+          (click)="sortToggle.emit(column.field)"
+        >
+          {{ column.label }}
+          @if (levelOf(column.field); as level) {
+            <span aria-hidden="true">{{ level.direction === 'asc' ? '↑' : '↓' }}</span>
+            @if (sort().length > 1) {
+              <sup aria-hidden="true">{{ level.number }}</sup>
+            }
+          }
+        </button>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        @switch (column.field) {
+          @case ('id') {
+            <span class="muted no-wrap">{{ row.id }}</span>
+          }
+          @case ('title') {
+            <span class="title">{{ row.title }}</span>
+          }
+          @case ('organizationName') {
+            {{ row.organizationName }}
+          }
+          @case ('status') {
+            <app-status-pill [value]="row.status" />
+          }
+          @case ('priority') {
+            <app-status-pill [value]="row.priority" />
+          }
+          @case ('assignedTo') {
+            @if (initials(row.assignedTo); as letters) {
+              <span class="assignee">
+                <span class="avatar avatar--{{ avatarTone(row.assignedTo) }}" aria-hidden="true">{{
+                  letters
+                }}</span>
+                <span>{{ row.assignedTo }}</span>
+              </span>
+            }
+          }
+          @case ('createdAt') {
+            <span class="secondary no-wrap">{{
+              row.createdAt | date: 'yyyy-MM-dd HH:mm' : 'UTC'
+            }}</span>
+          }
+          @case ('updatedAt') {
+            <span class="secondary no-wrap">{{
+              row.updatedAt | date: 'yyyy-MM-dd HH:mm' : 'UTC'
+            }}</span>
+          }
+        }
+      </td>
+    </ng-container>
+  }
+  <tr mat-header-row *matHeaderRowDef="fields"></tr>
+  <tr mat-row class="row" *matRowDef="let row; columns: fields"></tr>
+</table>

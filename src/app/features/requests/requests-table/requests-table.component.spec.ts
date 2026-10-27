@@ -42,12 +42,19 @@ describe('RequestsTableComponent', () => {
     return cell;
   }
 
+  // The cell text without decorative parts (the initials circle is aria-hidden).
+  function visibleText(cell: HTMLElement): string {
+    const copy = cell.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+    return copy.textContent?.trim() ?? '';
+  }
+
   it('render_Items_ShowsColumnsInOrder', async () => {
     await render([aRequest()], []);
 
     const headers = Array.from(root.querySelectorAll('th')).map((th) => th.textContent?.trim());
-    const cells = Array.from(root.querySelectorAll('tbody tr:first-child td')).map((td) =>
-      td.textContent?.trim(),
+    const cells = Array.from(root.querySelectorAll<HTMLElement>('tbody tr:first-child td')).map(
+      visibleText,
     );
     expect(headers).toEqual([
       'Id',
@@ -69,6 +76,25 @@ describe('RequestsTableComponent', () => {
       '2026-01-31 23:59',
       '2026-02-01 08:05',
     ]);
+  });
+
+  it('render_Items_ShowsPillsAndAssigneeInitials', async () => {
+    await render([aRequest({ status: 'InProgress', assignedTo: 'Dana Katz' })], []);
+
+    const row = root.querySelector('tbody tr') as HTMLElement;
+    const pills = Array.from(row.querySelectorAll('app-status-pill')).map((pill) =>
+      pill.textContent?.trim(),
+    );
+    expect(pills).toEqual(['In progress', 'High']);
+    expect(row.querySelector('.avatar')?.textContent?.trim()).toBe('DK');
+  });
+
+  it('render_BlankAssignee_ShowsNoInitialsCircle', async () => {
+    await render([aRequest({ assignedTo: '  ' })], []);
+
+    const row = root.querySelector('tbody tr') as HTMLElement;
+    expect(row.querySelector('.avatar')).toBeNull();
+    expect(row.querySelector('.assignee')).toBeNull();
   });
 
   it('render_TwoSortLevels_ShowsArrowsAndNumbers', async () => {

@@ -1,18 +1,21 @@
+import { DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   effect,
   inject,
+  linkedSignal,
   viewChild,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { PAGE_SIZE_OPTIONS } from '../../../core/models/request-query.model';
+import { ThousandsPaginatorIntl } from '../../../shared/thousands-paginator-intl';
 import { RequestsFilterBarComponent } from '../requests-filter-bar/requests-filter-bar.component';
 import { RequestsTableComponent } from '../requests-table/requests-table.component';
-import { RequestsStore } from '../requests.store';
+import { LoadStatus, RequestsStore } from '../requests.store';
 
 /**
  * Container: provides the store, wires its signals to the presentational parts and their outputs to its actions,
@@ -22,84 +25,17 @@ import { RequestsStore } from '../requests.store';
 @Component({
   selector: 'app-requests-list',
   imports: [
+    DecimalPipe,
     MatButtonModule,
     MatPaginatorModule,
     MatProgressBarModule,
     RequestsFilterBarComponent,
     RequestsTableComponent,
   ],
-  providers: [RequestsStore],
+  providers: [RequestsStore, { provide: MatPaginatorIntl, useClass: ThousandsPaginatorIntl }],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h2>Requests</h2>
-
-    <app-requests-filter-bar
-      [filters]="store.query()"
-      [searchDraft]="store.searchDraft()"
-      [organizationDraft]="store.organizationDraft()"
-      (searchDraftChange)="store.setSearchDraft($event)"
-      (organizationDraftChange)="store.setOrganizationDraft($event)"
-      (textSubmit)="store.submitText()"
-      (filtersChange)="store.setFilters($event)"
-      (assigneeAdd)="store.addAssignee($event)"
-      (assigneeRemove)="store.removeAssignee($event)"
-      (clear)="store.clearFilters()"
-    />
-
-    @if (store.status() === 'error') {
-      <div class="message" role="alert">
-        <p>{{ store.errorMessage() }}</p>
-        <button mat-flat-button type="button" (click)="store.retry()">Retry</button>
-      </div>
-    } @else {
-      <!-- Reserves the bar's height, so the table doesn't jump when loading starts and ends. -->
-      <div class="progress">
-        @if (loading()) {
-          <mat-progress-bar mode="indeterminate" aria-label="Loading requests" />
-        }
-      </div>
-
-      @if (empty()) {
-        <div class="message empty-state">
-          <p>No requests match these filters</p>
-          <button mat-stroked-button type="button" (click)="store.clearFilters()">
-            Clear filters
-          </button>
-        </div>
-      } @else {
-        <app-requests-table
-          [items]="store.items()"
-          [sort]="store.query().sort"
-          [loading]="loading()"
-          (sortToggle)="store.toggleSort($event)"
-          (sortReset)="store.resetSort()"
-        />
-      }
-
-      <!-- Shown with the empty state too: a page past the end (a stale link) still shows the total and can page back. -->
-      <mat-paginator
-        aria-label="Select page"
-        showFirstLastButtons
-        [length]="store.totalCount()"
-        [pageSize]="store.query().pageSize"
-        [pageSizeOptions]="pageSizeOptions"
-        (page)="store.setPage($event.pageIndex + 1, $event.pageSize)"
-      />
-    }
-  `,
-  styles: `
-    .progress {
-      height: 4px;
-    }
-
-    .message {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 32px 16px;
-    }
-  `,
+  templateUrl: './requests-list.component.html',
+  styleUrl: './requests-list.component.scss',
 })
 export class RequestsListComponent {
   protected readonly store = inject(RequestsStore);
@@ -107,6 +43,15 @@ export class RequestsListComponent {
 
   protected readonly pageSizeOptions = [...PAGE_SIZE_OPTIONS];
   protected readonly loading = computed(() => this.store.status() === 'loading');
+  // True from the first success on. The store keeps the previous result while loading, so the last total stays
+  // visible and the header doesn't jump; the error state hides it like the rest of the list.
+  private readonly loadedOnce = linkedSignal<LoadStatus, boolean>({
+    source: () => this.store.status(),
+    computation: (status, previous) => status === 'success' || (previous?.value ?? false),
+  });
+  protected readonly showTotal = computed(
+    () => this.loadedOnce() && this.store.status() !== 'error',
+  );
   protected readonly empty = computed(
     () => this.store.status() === 'success' && this.store.items().length === 0,
   );

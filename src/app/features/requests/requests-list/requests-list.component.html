@@ -1,0 +1,64 @@
+<section class="card">
+  <header class="card-header">
+    <h2>Requests</h2>
+    @if (showTotal()) {
+      <p class="total">{{ store.totalCount() | number }} total</p>
+    }
+  </header>
+
+  <app-requests-filter-bar
+    [filters]="store.query()"
+    [searchDraft]="store.searchDraft()"
+    [organizationDraft]="store.organizationDraft()"
+    (searchDraftChange)="store.setSearchDraft($event)"
+    (organizationDraftChange)="store.setOrganizationDraft($event)"
+    (textSubmit)="store.submitText()"
+    (filtersChange)="store.setFilters($event)"
+    (assigneeAdd)="store.addAssignee($event)"
+    (assigneeRemove)="store.removeAssignee($event)"
+    (clear)="store.clearFilters()"
+  />
+
+  <!-- Stats KPI cards (stats task) go here -->
+
+  @if (store.status() === 'error') {
+    <div class="message" role="alert">
+      <p>{{ store.errorMessage() }}</p>
+      <button mat-flat-button type="button" (click)="store.retry()">Retry</button>
+    </div>
+  } @else {
+    <!-- Reserves the bar's height, so the table doesn't jump when loading starts and ends. -->
+    <div class="progress">
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate" aria-label="Loading requests" />
+      }
+    </div>
+
+    @if (empty()) {
+      <div class="message empty-state">
+        <p>No requests match these filters</p>
+        <button mat-stroked-button type="button" (click)="store.clearFilters()">
+          Clear filters
+        </button>
+      </div>
+    } @else {
+      <app-requests-table
+        [items]="store.items()"
+        [sort]="store.query().sort"
+        [loading]="loading()"
+        (sortToggle)="store.toggleSort($event)"
+        (sortReset)="store.resetSort()"
+      />
+    }
+
+    <!-- Shown with the empty state too: a page past the end (a stale link) still shows the total and can page back. -->
+    <mat-paginator
+      aria-label="Select page"
+      showFirstLastButtons
+      [length]="store.totalCount()"
+      [pageSize]="store.query().pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      (page)="store.setPage($event.pageIndex + 1, $event.pageSize)"
+    />
+  }
+</section>

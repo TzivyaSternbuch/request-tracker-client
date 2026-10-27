@@ -1,0 +1,39 @@
+.card {
+  box-sizing: border-box;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px;
+  background: var(--app-card-background);
+  border: 1px solid var(--app-card-border);
+  border-radius: 14px;
+}
+
+.card-header {
+  margin-bottom: 14px;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+  }
+}
+
+.total {
+  margin: 0;
+  font-size: 13px;
+  color: var(--app-text-muted);
+}
+
+.progress {
+  height: 4px;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--app-text-secondary);
+}

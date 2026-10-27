@@ -1,0 +1,75 @@
+.sort-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.default-note {
+  color: var(--app-text-muted);
+  font: var(--mat-sys-body-small);
+}
+
+table {
+  width: 100%;
+}
+
+table.loading tbody {
+  opacity: 0.5;
+}
+
+// Table tokens have no hover colour or text transform, so these sit on the component's own elements.
+.row:hover {
+  background: var(--app-row-hover);
+}
+
+.sort-button {
+  all: unset;
+  cursor: pointer;
+  font: inherit;
+  text-transform: uppercase;
+}
+
+.sort-button:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+}
+
+.muted {
+  color: var(--app-text-muted);
+}
+
+.secondary {
+  color: var(--app-text-secondary);
+}
+
+.no-wrap {
+  white-space: nowrap;
+}
+
+.title {
+  font-weight: 500;
+}
+
+.assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 26px;
+  text-align: center;
+  font-weight: 600;
+}
+
+@each $tone in 'blue', 'amber', 'green', 'red', 'gray' {
+  .avatar--#{$tone} {
+    background: var(--app-tone-#{$tone}-background);
+    color: var(--app-tone-#{$tone}-text);
+  }
+}
