@@ -1,0 +1,48 @@
+@if (store.result(); as result) {
+  <section class="result" aria-label="Update results">
+    <h3>Update results</h3>
+    <div class="chips">
+      <span class="chip chip--ok">{{ result.updatedCount }} updated</span>
+      @if (result.failed.length > 0) {
+        <span class="chip chip--warn">{{ result.failed.length }} not updated</span>
+      }
+    </div>
+
+    @if (result.failed.length > 0) {
+      <p class="lead">The following requests could not be updated:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of result.failed; track item.id) {
+            <tr>
+              <td class="muted">#{{ item.id }}</td>
+              <td>{{ item.title }}</td>
+              <td>{{ reasonText(item) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    <footer>
+      @if (result.updatedCount > 0) {
+        <p class="saved">Successful updates have been saved.</p>
+      }
+      <div class="actions">
+        <button mat-stroked-button type="button" (click)="store.closeResult()">Close</button>
+        @if (result.failed.length > 0) {
+          <button mat-flat-button type="button" (click)="store.reloadFailed()">
+            Reload {{ result.failed.length }}
+            {{ result.failed.length === 1 ? 'request' : 'requests' }}
+          </button>
+        }
+      </div>
+    </footer>
+  </section>
+}

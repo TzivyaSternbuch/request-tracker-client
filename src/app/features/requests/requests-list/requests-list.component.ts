@@ -15,6 +15,9 @@ import { RouterOutlet } from '@angular/router';
 import { LoadStatus } from '../../../core/models/load-status.model';
 import { PAGE_SIZE_OPTIONS } from '../../../core/models/request-query.model';
 import { ThousandsPaginatorIntl } from '../../../shared/thousands-paginator-intl';
+import { BulkUpdateBarComponent } from '../bulk-update/bulk-update-bar.component';
+import { BulkUpdateResultComponent } from '../bulk-update/bulk-update-result.component';
+import { BulkUpdateStore } from '../bulk-update/bulk-update.store';
 import { RequestStatsComponent } from '../request-stats/request-stats.component';
 import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsFilterBarComponent } from '../requests-filter-bar/requests-filter-bar.component';
@@ -29,6 +32,8 @@ import { RequestsStore } from '../requests.store';
 @Component({
   selector: 'app-requests-list',
   imports: [
+    BulkUpdateBarComponent,
+    BulkUpdateResultComponent,
     DecimalPipe,
     MatButtonModule,
     MatPaginatorModule,
@@ -41,6 +46,7 @@ import { RequestsStore } from '../requests.store';
   providers: [
     RequestsStore,
     RequestStatsStore,
+    BulkUpdateStore,
     { provide: MatPaginatorIntl, useClass: ThousandsPaginatorIntl },
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +56,7 @@ import { RequestsStore } from '../requests.store';
 export class RequestsListComponent {
   protected readonly store = inject(RequestsStore);
   protected readonly statsStore = inject(RequestStatsStore);
+  protected readonly bulkStore = inject(BulkUpdateStore);
   private readonly paginator = viewChild(MatPaginator);
 
   protected readonly pageSizeOptions = [...PAGE_SIZE_OPTIONS];

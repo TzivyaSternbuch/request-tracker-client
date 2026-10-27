@@ -1,0 +1,85 @@
+.result {
+  margin: 8px 0 12px;
+  padding: 12px 16px;
+  background: var(--app-card-background);
+  border: 1px solid var(--app-card-border);
+  border-radius: 8px;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+}
+
+.chip {
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 999px;
+}
+
+.chip--ok {
+  background: var(--app-tone-green-background);
+  color: var(--app-tone-green-text);
+}
+
+.chip--warn {
+  background: var(--app-tone-amber-background);
+  color: var(--app-tone-amber-text);
+}
+
+.lead {
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: var(--app-text-secondary);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 6px 12px;
+  text-align: left;
+  border: 1px solid var(--app-divider);
+}
+
+th {
+  background: var(--app-table-header-background);
+  font-weight: 500;
+  color: var(--app-text-secondary);
+}
+
+.muted {
+  color: var(--app-text-muted);
+}
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.saved {
+  margin: 0;
+  font-size: 13px;
+  color: var(--app-tone-green-text);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}

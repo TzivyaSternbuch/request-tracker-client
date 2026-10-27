@@ -13,8 +13,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActingAsService } from '../../../core/acting-as.service';
 import { RequestStatus } from '../../../core/models/request.model';
+import { StatusSelectComponent } from '../../../shared/status-select/status-select.component';
 import { StatusPillComponent } from '../../../shared/status-pill/status-pill.component';
-import { valueLabel } from '../../../shared/value-label';
 import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsStore } from '../requests.store';
 import { RequestDetailsStore } from './request-details.store';
@@ -36,6 +36,7 @@ export interface RequestDetailsData {
     MatProgressBarModule,
     RequestHistoryComponent,
     StatusPillComponent,
+    StatusSelectComponent,
   ],
   providers: [RequestDetailsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,8 +50,6 @@ export class RequestDetailsComponent {
   private readonly listStore = inject(RequestsStore, { optional: true });
   private readonly statsStore = inject(RequestStatsStore, { optional: true });
   private readonly data = inject<RequestDetailsData>(MAT_DIALOG_DATA);
-
-  protected readonly valueLabel = valueLabel;
 
   protected readonly panelOpen = signal(false);
   protected readonly draftStatus = signal<RequestStatus | ''>('');
@@ -101,10 +100,6 @@ export class RequestDetailsComponent {
 
   protected closePanel(): void {
     this.panelOpen.set(false);
-  }
-
-  protected onStatusChange(event: Event): void {
-    this.draftStatus.set((event.target as HTMLSelectElement).value as RequestStatus | '');
   }
 
   protected onNameInput(event: Event): void {
