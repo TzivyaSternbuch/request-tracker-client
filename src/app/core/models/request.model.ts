@@ -26,4 +26,5 @@ export interface RequestDto {
   createdAt: string;
   updatedAt: string;
   version: string;
+  allowedStatuses: RequestStatus[];
 }

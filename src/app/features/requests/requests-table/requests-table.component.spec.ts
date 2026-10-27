@@ -15,6 +15,7 @@ function aRequest(overrides: Partial<RequestDto> = {}): RequestDto {
     createdAt: '2026-01-31T23:59:00+00:00',
     updatedAt: '2026-02-01T08:05:00+00:00',
     version: 'AAAAAAAAB9E=',
+    allowedStatuses: ['InProgress'],
     ...overrides,
   };
 }

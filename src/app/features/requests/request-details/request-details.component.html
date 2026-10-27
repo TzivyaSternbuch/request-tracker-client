@@ -35,7 +35,7 @@
                     <span>New status</span>
                     <select [disabled]="saving()" (change)="onStatusChange($event)">
                       <option value="" [selected]="draftStatus() === ''" disabled></option>
-                      @for (status of statuses; track status) {
+                      @for (status of allowedStatuses(); track status) {
                         <option [value]="status" [selected]="draftStatus() === status">
                           {{ valueLabel(status) }}
                         </option>

@@ -12,7 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ActingAsService } from '../../../core/acting-as.service';
-import { REQUEST_STATUSES, RequestStatus } from '../../../core/models/request.model';
+import { RequestStatus } from '../../../core/models/request.model';
 import { StatusPillComponent } from '../../../shared/status-pill/status-pill.component';
 import { valueLabel } from '../../../shared/value-label';
 import { RequestStatsStore } from '../request-stats/request-stats.store';
@@ -43,7 +43,6 @@ export class RequestDetailsComponent {
   private readonly statsStore = inject(RequestStatsStore, { optional: true });
   private readonly data = inject<RequestDetailsData>(MAT_DIALOG_DATA);
 
-  protected readonly statuses = REQUEST_STATUSES;
   protected readonly valueLabel = valueLabel;
 
   protected readonly panelOpen = signal(false);
@@ -51,9 +50,17 @@ export class RequestDetailsComponent {
   protected readonly draftName = signal('');
 
   protected readonly saving = computed(() => this.store.saveState() === 'saving');
-  protected readonly canSave = computed(
-    () => this.draftStatus() !== '' && this.draftName().trim() !== '' && !this.saving(),
-  );
+  // The server decides which statuses the request may move to; after a 409 reload the draft may no longer be one.
+  protected readonly allowedStatuses = computed(() => this.store.request()?.allowedStatuses ?? []);
+  protected readonly canSave = computed(() => {
+    const draft = this.draftStatus();
+    return (
+      draft !== '' &&
+      this.allowedStatuses().includes(draft) &&
+      this.draftName().trim() !== '' &&
+      !this.saving()
+    );
+  });
   // A reload keeps the request on screen (dimmed); only the first load has nothing to show yet.
   protected readonly showContent = computed(
     () =>
