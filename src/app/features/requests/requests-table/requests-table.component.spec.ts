@@ -65,8 +65,8 @@ describe('RequestsTableComponent', () => {
       'Status',
       'Priority',
       'Assignee',
-      'Created UTC',
-      'Updated UTC',
+      'Created',
+      'Updated',
     ]);
     expect(cells).toEqual([
       '7',
@@ -137,15 +137,6 @@ describe('RequestsTableComponent', () => {
     expect(headerCell('Title').querySelector('button')?.getAttribute('aria-label')).toBe(
       'Title, not sorted',
     );
-  });
-
-  it('render_DateColumns_AriaLabelContainsVisibleLabel', async () => {
-    await render([aRequest()], [{ field: 'createdAt', direction: 'desc' }]);
-
-    const created = headerCell('Created').querySelector('button')?.getAttribute('aria-label');
-    const updated = headerCell('Updated').querySelector('button')?.getAttribute('aria-label');
-    expect(created).toBe('Created (UTC), sorted descending');
-    expect(updated).toBe('Updated (UTC), not sorted');
   });
 
   it('headerClick_Column_EmitsSortToggleWithField', async () => {

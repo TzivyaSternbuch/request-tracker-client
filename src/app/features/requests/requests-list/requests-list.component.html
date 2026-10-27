@@ -19,15 +19,10 @@
       }
     </header>
     <div barEnd class="sort-controls">
-      @if (store.query().sort.length === 0) {
+      @if (defaultOrder()) {
         <span class="default-note">Default order: newest first</span>
       }
-      <button
-        mat-button
-        type="button"
-        [disabled]="store.query().sort.length === 0"
-        (click)="store.resetSort()"
-      >
+      <button mat-button type="button" [disabled]="defaultOrder()" (click)="store.resetSort()">
         Reset sorting
       </button>
     </div>

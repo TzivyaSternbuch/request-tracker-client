@@ -66,12 +66,11 @@ export class RequestsTableComponent {
   }
 
   protected ariaLabel(column: Column): string {
-    const name = column.label;
     const level = this.levelOf(column.field);
-    if (!level) return `${name}, not sorted`;
+    if (!level) return `${column.label}, not sorted`;
     const direction = level.direction === 'asc' ? 'ascending' : 'descending';
     return this.sort().length > 1
-      ? `${name}, sorted ${direction}, level ${level.number}`
-      : `${name}, sorted ${direction}`;
+      ? `${column.label}, sorted ${direction}, level ${level.number}`
+      : `${column.label}, sorted ${direction}`;
   }
 }
