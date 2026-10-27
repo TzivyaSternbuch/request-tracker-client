@@ -13,7 +13,7 @@ export interface FailedItem {
   id: number;
   title: string;
   reason: BulkFailureReason;
-  fromStatus: RequestStatus;
+  /** The status that was requested; the status the server compared it with is not known here. */
   toStatus: RequestStatus;
 }
 
@@ -142,7 +142,6 @@ export class BulkUpdateStore {
             id,
             reason,
             title: sent.get(id)?.title ?? '',
-            fromStatus: sent.get(id)?.status ?? status,
             toStatus: status,
           }));
           this.resultSignal.set({ updatedCount: result.succeeded.length, failed });

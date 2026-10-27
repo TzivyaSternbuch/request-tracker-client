@@ -146,12 +146,11 @@ describe('BulkUpdateStore', () => {
     expect(store.result()).toEqual({
       updatedCount: 1,
       failed: [
-        { id: 2, title: 'Request 2', reason: 'Conflict', fromStatus: 'New', toStatus: 'Completed' },
+        { id: 2, title: 'Request 2', reason: 'Conflict', toStatus: 'Completed' },
         {
           id: 3,
           title: 'Request 3',
           reason: 'InvalidTransition',
-          fromStatus: 'New',
           toStatus: 'Completed',
         },
       ],

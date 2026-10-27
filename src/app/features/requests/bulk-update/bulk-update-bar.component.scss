@@ -24,14 +24,8 @@
   color: var(--app-text-secondary);
 }
 
-select {
-  min-width: 160px;
-  padding: 6px 10px;
-  font: inherit;
-  font-size: 14px;
-  background: var(--app-card-background);
-  border: 1px solid var(--app-control-border);
-  border-radius: 6px;
+.select {
+  width: 180px;
 }
 
 .hint,

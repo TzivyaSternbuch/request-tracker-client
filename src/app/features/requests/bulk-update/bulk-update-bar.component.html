@@ -4,17 +4,17 @@
   </p>
 
   @if (store.choosing()) {
-    <label class="field">
-      <span>New status</span>
-      <select [disabled]="store.saving()" (change)="onStatusChange($event)">
-        <option value="" [selected]="store.draftStatus() === ''" disabled>Choose status</option>
-        @for (status of statuses; track status) {
-          <option [value]="status" [selected]="store.draftStatus() === status">
-            {{ valueLabel(status) }}
-          </option>
-        }
-      </select>
-    </label>
+    <div class="field">
+      <span aria-hidden="true">New status</span>
+      <app-status-select
+        ariaLabel="New status"
+        class="select"
+        placeholder="Choose status"
+        [value]="store.draftStatus()"
+        [disabled]="store.saving()"
+        (valueChange)="store.setDraftStatus($event)"
+      />
+    </div>
     <button mat-flat-button type="button" [disabled]="!store.canSubmit()" (click)="store.submit()">
       {{ store.saving() ? 'Updating…' : 'Update status' }}
     </button>

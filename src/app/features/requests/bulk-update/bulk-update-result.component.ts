@@ -22,7 +22,8 @@ const REASONS: Record<BulkFailureReason, string> = {
 export class BulkUpdateResultComponent {
   protected readonly store = inject(BulkUpdateStore);
   protected reasonText(item: FailedItem): string {
-    if (item.reason !== 'InvalidTransition') return REASONS[item.reason];
-    return `${valueLabel(item.fromStatus)} → ${valueLabel(item.toStatus)} is not allowed.`;
+    return item.reason === 'InvalidTransition'
+      ? `Moving to ${valueLabel(item.toStatus)} is not allowed from its current status.`
+      : REASONS[item.reason];
   }
 }
