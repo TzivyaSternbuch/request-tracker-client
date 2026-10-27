@@ -49,6 +49,11 @@
       }
     </div>
 
+    @if (bulkStore.count() > 0) {
+      <app-bulk-update-bar />
+    }
+    <app-bulk-update-result />
+
     @if (empty()) {
       <div class="message empty-state">
         <p>No requests match these filters</p>
@@ -61,7 +66,11 @@
         [items]="store.items()"
         [sort]="store.query().sort"
         [loading]="loading()"
+        [selectedIds]="bulkStore.selectedIds()"
+        [allSelected]="bulkStore.allSelected()"
         (sortToggle)="store.toggleSort($event)"
+        (rowToggle)="bulkStore.toggle($event)"
+        (allToggle)="bulkStore.toggleAll()"
       />
     }
 

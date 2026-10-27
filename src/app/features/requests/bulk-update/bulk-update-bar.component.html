@@ -1,0 +1,41 @@
+<div class="bar" role="region" aria-label="Bulk update">
+  <p class="count">
+    {{ store.count() | number }} {{ store.count() === 1 ? 'request' : 'requests' }} selected
+  </p>
+
+  @if (store.choosing()) {
+    <label class="field">
+      <span>New status</span>
+      <select [disabled]="store.saving()" (change)="onStatusChange($event)">
+        <option value="" [selected]="store.draftStatus() === ''" disabled>Choose status</option>
+        @for (status of statuses; track status) {
+          <option [value]="status" [selected]="store.draftStatus() === status">
+            {{ valueLabel(status) }}
+          </option>
+        }
+      </select>
+    </label>
+    <button mat-flat-button type="button" [disabled]="!store.canSubmit()" (click)="store.submit()">
+      {{ store.saving() ? 'Updating…' : 'Update status' }}
+    </button>
+    <button mat-button type="button" [disabled]="store.saving()" (click)="store.cancelChoosing()">
+      Cancel
+    </button>
+  } @else {
+    <button mat-flat-button type="button" (click)="store.startChoosing()">Change status</button>
+    <button mat-button type="button" (click)="store.clearSelection()">Clear selection</button>
+  }
+
+  @if (store.limitReached()) {
+    <p class="hint">At most {{ maxItems }} requests can be updated at once.</p>
+  }
+  @if (store.choosing() && store.missingName()) {
+    <p class="hint">Enter your name under “Acting as” to update.</p>
+  }
+  @if (store.errorMessage(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+</div>
+@if (store.saving()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Updating requests" />
+}

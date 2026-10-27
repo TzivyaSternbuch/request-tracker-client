@@ -1,0 +1,50 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  background: var(--app-chip-active-background);
+  border: 1px solid var(--app-chip-active-border);
+  border-radius: 8px;
+}
+
+.count {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--app-text-secondary);
+}
+
+select {
+  min-width: 160px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 14px;
+  background: var(--app-card-background);
+  border: 1px solid var(--app-control-border);
+  border-radius: 6px;
+}
+
+.hint,
+.error {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+}
+
+.hint {
+  color: var(--app-text-muted);
+}
+
+.error {
+  color: var(--app-tone-red-text);
+}

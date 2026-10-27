@@ -46,7 +46,7 @@ describe('RequestsTableComponent', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     await render([aRequest({ id: 7 })], []);
 
-    (root.querySelector('tr.row td') as HTMLElement).click();
+    (root.querySelector('tr.row td.mat-column-id') as HTMLElement).click();
 
     expect(navigate).toHaveBeenCalledWith(['/requests', 7], { queryParamsHandling: 'preserve' });
   });
@@ -61,6 +61,39 @@ describe('RequestsTableComponent', () => {
 
     expect(navigateByUrl).toHaveBeenCalledOnce();
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('checkboxClick_Row_EmitsIdAndDoesNotOpenDetails', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const toggled: number[] = [];
+    fixture.componentInstance.rowToggle.subscribe((id) => toggled.push(id));
+    await render([aRequest({ id: 7 })], []);
+
+    (root.querySelector('tbody td.select-cell input') as HTMLInputElement).click();
+
+    expect(toggled).toEqual([7]);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('checkboxClick_Header_EmitsAllToggle', async () => {
+    let emitted = 0;
+    fixture.componentInstance.allToggle.subscribe(() => emitted++);
+    await render([aRequest()], []);
+
+    (root.querySelector('th.select-cell input') as HTMLInputElement).click();
+
+    expect(emitted).toBe(1);
+  });
+
+  it('render_SelectedIds_MarksTheRowsChecked', async () => {
+    fixture.componentRef.setInput('selectedIds', new Set([7]));
+    await render([aRequest({ id: 7 }), aRequest({ id: 8 })], []);
+
+    const checked = Array.from(
+      root.querySelectorAll<HTMLInputElement>('tbody td.select-cell input'),
+    ).map((input) => input.checked);
+    expect(checked).toEqual([true, false]);
+    expect(root.querySelectorAll('tr.row.selected')).toHaveLength(1);
   });
 
   async function render(items: RequestDto[], sort: SortLevel[], loading = false) {
@@ -94,6 +127,7 @@ describe('RequestsTableComponent', () => {
       visibleText,
     );
     expect(headers).toEqual([
+      '',
       'Id',
       'Title',
       'Organization',
@@ -104,6 +138,7 @@ describe('RequestsTableComponent', () => {
       'Updated',
     ]);
     expect(cells).toEqual([
+      '',
       '7',
       'Fix the roof',
       'Acme',
