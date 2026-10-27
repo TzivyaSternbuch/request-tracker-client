@@ -159,6 +159,16 @@ describe('RequestsApiService', () => {
     req.flush(sample);
   });
 
+  it('getHistory_PageAndSize_SendsThemAsQueryParams', () => {
+    service.getHistory(7, 2, 10).subscribe();
+
+    const req = http.expectOne((r) => r.url === '/api/requests/7/history');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('page')).toBe('2');
+    expect(req.request.params.get('pageSize')).toBe('10');
+    req.flush({ items: [], page: 2, pageSize: 10, totalCount: 0 });
+  });
+
   it('updateStatus_Response_ReturnsUpdatedRequest', () => {
     const updated = { ...sample, status: 'Waiting' as const, version: 'BBB=' };
     let result: RequestDto | undefined;

@@ -9,6 +9,7 @@ import { PagedResult } from '../../../core/models/paged-result.model';
 import { RequestQuery } from '../../../core/models/request-query.model';
 import { RequestStats } from '../../../core/models/request-stats.model';
 import { RequestDto, UpdateStatusRequest } from '../../../core/models/request.model';
+import { StatusHistoryDto } from '../../../core/models/status-history.model';
 
 function aRequest(id: number, overrides: Partial<RequestDto> = {}): RequestDto {
   return {
@@ -53,6 +54,10 @@ class FakeApi {
   getById(id: number): Observable<RequestDto> {
     this.loadedIds.push(id);
     return of(aRequest(id));
+  }
+
+  getHistory(): Observable<PagedResult<StatusHistoryDto>> {
+    return of({ items: [], page: 1, pageSize: 10, totalCount: 0 });
   }
 
   updateStatus(id: number, body: UpdateStatusRequest): Observable<RequestDto> {

@@ -1,5 +1,6 @@
-import { signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { ActingAsService } from '../../../core/acting-as.service';
@@ -8,6 +9,7 @@ import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsStore } from '../requests.store';
 import { DetailsLoadState, RequestDetailsStore, SaveState } from './request-details.store';
 import { RequestDetailsComponent } from './request-details.component';
+import { RequestHistoryComponent } from './request-history.component';
 
 const REQUEST: RequestDto = {
   id: 5,
@@ -20,6 +22,13 @@ const REQUEST: RequestDto = {
   updatedAt: '2026-02-01T08:05:00+00:00',
   version: 'AAAAAAAAB9E=',
 };
+
+// The real history component is covered by its own spec; here only what the dialog hands it matters.
+@Component({ selector: 'app-request-history', template: '' })
+class StubHistoryComponent {
+  readonly requestId = input.required<number>();
+  readonly version = input.required<string>();
+}
 
 class FakeDetailsStore {
   readonly loadState = signal<DetailsLoadState>('success');
@@ -62,6 +71,10 @@ describe('RequestDetailsComponent', () => {
     TestBed.overrideComponent(RequestDetailsComponent, {
       remove: { providers: [RequestDetailsStore] },
       add: { providers: [{ provide: RequestDetailsStore, useValue: store }] },
+    });
+    TestBed.overrideComponent(RequestDetailsComponent, {
+      remove: { imports: [RequestHistoryComponent] },
+      add: { imports: [StubHistoryComponent] },
     });
     fixture = TestBed.createComponent(RequestDetailsComponent);
     root = fixture.nativeElement as HTMLElement;
@@ -245,5 +258,23 @@ describe('RequestDetailsComponent', () => {
     expect(listStore.retry).toHaveBeenCalledOnce();
     expect(statsStore.refresh).toHaveBeenCalledOnce();
     expect(root.querySelector('form')).toBeNull();
+  });
+
+  it('history_RequestLoaded_GetsIdAndVersion', async () => {
+    await render();
+
+    const history = fixture.debugElement.query(By.directive(StubHistoryComponent));
+    const stub = history.componentInstance as StubHistoryComponent;
+    expect(stub.requestId()).toBe(5);
+    expect(stub.version()).toBe(REQUEST.version);
+  });
+
+  it('history_RequestNotLoaded_IsNotShown', async () => {
+    store.request.set(null);
+    store.loadState.set('error');
+
+    await render();
+
+    expect(fixture.debugElement.query(By.directive(StubHistoryComponent))).toBeNull();
   });
 });

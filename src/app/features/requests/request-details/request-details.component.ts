@@ -18,6 +18,7 @@ import { valueLabel } from '../../../shared/value-label';
 import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsStore } from '../requests.store';
 import { RequestDetailsStore } from './request-details.store';
+import { RequestHistoryComponent } from './request-history.component';
 
 export interface RequestDetailsData {
   id: number;
@@ -29,7 +30,13 @@ export interface RequestDetailsData {
  */
 @Component({
   selector: 'app-request-details',
-  imports: [DatePipe, MatButtonModule, MatProgressBarModule, StatusPillComponent],
+  imports: [
+    DatePipe,
+    MatButtonModule,
+    MatProgressBarModule,
+    RequestHistoryComponent,
+    StatusPillComponent,
+  ],
   providers: [RequestDetailsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './request-details.component.html',

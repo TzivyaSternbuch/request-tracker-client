@@ -98,7 +98,6 @@
     </p>
   }
 
-  <!-- The right column is reserved for the history (task 15); it renders nothing until then. -->
   <div class="body">
     <div class="main">
       @switch (store.loadState()) {
@@ -145,6 +144,10 @@
         }
       }
     </div>
-    <div class="history-column"></div>
+    <div class="history-column">
+      @if (store.request(); as request) {
+        <app-request-history [requestId]="request.id" [version]="request.version" />
+      }
+    </div>
   </div>
 </div>
