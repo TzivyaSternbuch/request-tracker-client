@@ -35,6 +35,7 @@
                     <span aria-hidden="true">New status</span>
                     <app-status-select
                       ariaLabel="New status"
+                      [statuses]="allowedStatuses()"
                       [value]="draftStatus()"
                       [disabled]="saving()"
                       (valueChange)="draftStatus.set($event)"

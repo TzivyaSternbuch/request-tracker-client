@@ -56,9 +56,17 @@ export class RequestDetailsComponent {
   protected readonly draftName = signal('');
 
   protected readonly saving = computed(() => this.store.saveState() === 'saving');
-  protected readonly canSave = computed(
-    () => this.draftStatus() !== '' && this.draftName().trim() !== '' && !this.saving(),
-  );
+  // The server decides which statuses the request may move to; after a 409 reload the draft may no longer be one.
+  protected readonly allowedStatuses = computed(() => this.store.request()?.allowedStatuses ?? []);
+  protected readonly canSave = computed(() => {
+    const draft = this.draftStatus();
+    return (
+      draft !== '' &&
+      this.allowedStatuses().includes(draft) &&
+      this.draftName().trim() !== '' &&
+      !this.saving()
+    );
+  });
   // A reload keeps the request on screen (dimmed); only the first load has nothing to show yet.
   protected readonly showContent = computed(
     () =>

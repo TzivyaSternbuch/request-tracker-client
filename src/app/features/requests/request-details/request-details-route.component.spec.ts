@@ -22,6 +22,7 @@ function aRequest(id: number, overrides: Partial<RequestDto> = {}): RequestDto {
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     version: 'v1',
+    allowedStatuses: ['InProgress'],
     ...overrides,
   };
 }
@@ -150,7 +151,7 @@ describe('RequestDetailsRouteComponent', () => {
     buttons.find((b) => b.getAttribute('aria-label') === 'Change status')?.click();
     await settle();
     const select = document.querySelector('app-request-details select') as HTMLSelectElement;
-    select.value = 'Waiting';
+    select.value = 'InProgress';
     select.dispatchEvent(new Event('change'));
     const input = document.querySelector('app-request-details input') as HTMLInputElement;
     input.value = 'Lee';
@@ -161,7 +162,7 @@ describe('RequestDetailsRouteComponent', () => {
       ?.click();
     await settle();
 
-    expect(api.patches).toEqual([{ status: 'Waiting', version: 'v1', changedBy: 'Lee' }]);
+    expect(api.patches).toEqual([{ status: 'InProgress', version: 'v1', changedBy: 'Lee' }]);
     expect(api.queries).toHaveLength(2);
     // Once when the list opened, once after the save.
     expect(api.statsCalls).toBe(2);

@@ -9,7 +9,7 @@ import { valueLabel } from '../value-label';
   template: `
     <select [attr.aria-label]="ariaLabel()" [disabled]="disabled()" (change)="onChange($event)">
       <option value="" [selected]="value() === ''" disabled>{{ placeholder() }}</option>
-      @for (status of statuses; track status) {
+      @for (status of statuses(); track status) {
         <option [value]="status" [selected]="value() === status">{{ valueLabel(status) }}</option>
       }
     </select>
@@ -39,6 +39,8 @@ import { valueLabel } from '../value-label';
   `,
 })
 export class StatusSelectComponent {
+  /** The choices; all statuses unless the caller knows which ones apply. */
+  readonly statuses = input<readonly RequestStatus[]>(REQUEST_STATUSES);
   readonly value = input<RequestStatus | ''>('');
   readonly placeholder = input('');
   readonly disabled = input(false);
@@ -46,7 +48,6 @@ export class StatusSelectComponent {
 
   readonly valueChange = output<RequestStatus | ''>();
 
-  protected readonly statuses = REQUEST_STATUSES;
   protected readonly valueLabel = valueLabel;
 
   protected onChange(event: Event): void {
