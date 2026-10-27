@@ -26,7 +26,6 @@ class FakeHistoryStore {
   readonly hasMore = signal(false);
 
   readonly load = vi.fn();
-  readonly retry = vi.fn();
   readonly loadMore = vi.fn();
 }
 
@@ -74,7 +73,7 @@ describe('RequestHistoryComponent', () => {
     expect(store.load).toHaveBeenCalledTimes(2);
   });
 
-  it('entries_Loaded_ShowsChangeAuthorAndUtcTime', async () => {
+  it('entries_Loaded_ShowsChangeAuthorAndTime', async () => {
     store.items.set([anEntry(2), anEntry(1)]);
     store.totalCount.set(2);
 
@@ -99,7 +98,31 @@ describe('RequestHistoryComponent', () => {
 
     expect(root.querySelector('[role="alert"]')?.textContent).toContain('Boom');
     button('Retry').click();
-    expect(store.retry).toHaveBeenCalled();
+    expect(store.load).toHaveBeenLastCalledWith(5);
+    expect(store.load).toHaveBeenCalledTimes(2);
+  });
+
+  it('error_ReloadFailedWithEntriesShown_ShowsMessageKeepsEntriesAndRetryReloads', async () => {
+    store.items.set([anEntry(2), anEntry(1)]);
+    store.totalCount.set(2);
+    store.status.set('error');
+    store.errorMessage.set('Boom');
+    await render();
+
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('Boom');
+    expect(root.querySelectorAll('.entry')).toHaveLength(2);
+    button('Retry').click();
+    expect(store.load).toHaveBeenLastCalledWith(5);
+  });
+
+  it('loadOlder_Reloading_IsDisabled', async () => {
+    store.items.set([anEntry(2), anEntry(1)]);
+    store.totalCount.set(5);
+    store.hasMore.set(true);
+    store.status.set('loading');
+    await render();
+
+    expect(button('Load older').disabled).toBe(true);
   });
 
   it('loadOlder_MoreEntriesExist_SaysSoAndLoadsThem', async () => {

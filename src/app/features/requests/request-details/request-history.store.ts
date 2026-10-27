@@ -30,7 +30,6 @@ export class RequestHistoryStore {
 
   private readonly query$ = new Subject<PageQuery>();
   private currentId: number | null = null;
-  private loadedPage = 0;
 
   readonly status = this.statusSignal.asReadonly();
   readonly items = this.itemsSignal.asReadonly();
@@ -65,7 +64,6 @@ export class RequestHistoryStore {
     if (id !== this.currentId) {
       this.itemsSignal.set([]);
       this.totalCountSignal.set(0);
-      this.loadedPage = 0;
     }
     this.currentId = id;
     this.statusSignal.set('loading');
@@ -74,17 +72,15 @@ export class RequestHistoryStore {
     this.query$.next({ id, page: 1 });
   }
 
-  retry(): void {
-    if (this.currentId !== null) this.load(this.currentId);
-  }
-
   loadMore(): void {
     if (this.currentId === null || !this.hasMore() || this.loadingMoreSignal()) return;
     if (this.statusSignal() !== 'success') return;
 
     this.loadingMoreSignal.set(true);
     this.loadMoreFailedSignal.set(false);
-    this.query$.next({ id: this.currentId, page: this.loadedPage + 1 });
+    // More entries exist, so every page loaded so far was full: the next page follows from the item count.
+    const nextPage = Math.floor(this.itemsSignal().length / HISTORY_PAGE_SIZE) + 1;
+    this.query$.next({ id: this.currentId, page: nextPage });
   }
 
   private onResult(result: PageResult): void {
@@ -104,7 +100,6 @@ export class RequestHistoryStore {
       firstPage ? result.items : [...current, ...result.items],
     );
     this.totalCountSignal.set(result.totalCount);
-    this.loadedPage = result.query.page;
     this.errorMessageSignal.set(null);
     this.statusSignal.set('success');
     this.loadingMoreSignal.set(false);

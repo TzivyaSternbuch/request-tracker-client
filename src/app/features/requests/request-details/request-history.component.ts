@@ -26,6 +26,10 @@ export class RequestHistoryComponent {
   readonly requestId = input.required<number>();
   readonly version = input.required<string>();
 
+  protected reload(): void {
+    this.store.load(this.requestId());
+  }
+
   constructor() {
     effect(() => {
       const id = this.requestId();

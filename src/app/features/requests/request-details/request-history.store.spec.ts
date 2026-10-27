@@ -21,6 +21,8 @@ function aPage(ids: number[], page: number, totalCount: number): PagedResult<Sta
   return { items: ids.map(anEntry), page, pageSize: HISTORY_PAGE_SIZE, totalCount };
 }
 
+const FULL_PAGE = Array.from({ length: HISTORY_PAGE_SIZE }, (_, i) => HISTORY_PAGE_SIZE - i);
+
 class FakeApi {
   calls: {
     id: number;
@@ -88,10 +90,22 @@ describe('RequestHistoryStore', () => {
     expect(store.status()).toBe('error');
     expect(store.errorMessage()).toBe('Boom');
 
-    store.retry();
+    store.load(5);
     expect(store.status()).toBe('loading');
     api.last.subject.next(aPage([1], 1, 1));
     expect(store.status()).toBe('success');
+    expect(store.items()).toHaveLength(1);
+  });
+
+  it('reload_ErrorWithItemsShown_KeepsItemsAndReportsError', () => {
+    store.load(5);
+    api.last.subject.next(aPage([1], 1, 1));
+
+    store.load(5);
+    api.last.subject.error(new HttpErrorResponse({ status: 500, error: { title: 'Boom' } }));
+
+    expect(store.status()).toBe('error');
+    expect(store.errorMessage()).toBe('Boom');
     expect(store.items()).toHaveLength(1);
   });
 
@@ -118,15 +132,15 @@ describe('RequestHistoryStore', () => {
 
   it('loadMore_MoreEntriesExist_AppendsOlderEntriesUntilTotalReached', () => {
     store.load(5);
-    api.last.subject.next(aPage([5, 4], 1, 3));
+    api.last.subject.next(aPage(FULL_PAGE, 1, HISTORY_PAGE_SIZE + 1));
     expect(store.hasMore()).toBe(true);
 
     store.loadMore();
     expect(api.last).toMatchObject({ id: 5, page: 2 });
     expect(store.loadingMore()).toBe(true);
-    api.last.subject.next(aPage([3], 2, 3));
+    api.last.subject.next(aPage([0], 2, HISTORY_PAGE_SIZE + 1));
 
-    expect(store.items().map((e) => e.id)).toEqual([5, 4, 3]);
+    expect(store.items()).toHaveLength(HISTORY_PAGE_SIZE + 1);
     expect(store.loadingMore()).toBe(false);
     expect(store.hasMore()).toBe(false);
   });
@@ -143,12 +157,12 @@ describe('RequestHistoryStore', () => {
 
   it('loadMore_Error_KeepsLoadedItemsAndRetryAsksForTheSamePage', () => {
     store.load(5);
-    api.last.subject.next(aPage([5, 4], 1, 3));
+    api.last.subject.next(aPage(FULL_PAGE, 1, HISTORY_PAGE_SIZE + 1));
     store.loadMore();
     api.last.subject.error(new HttpErrorResponse({ status: 500 }));
 
     expect(store.status()).toBe('success');
-    expect(store.items()).toHaveLength(2);
+    expect(store.items()).toHaveLength(HISTORY_PAGE_SIZE);
     expect(store.loadMoreFailed()).toBe(true);
     expect(store.loadingMore()).toBe(false);
 

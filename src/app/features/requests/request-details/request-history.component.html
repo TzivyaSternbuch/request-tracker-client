@@ -4,7 +4,7 @@
   @if (store.status() === 'error' && store.items().length === 0) {
     <div class="message" role="alert">
       <p>{{ store.errorMessage() }}</p>
-      <button mat-flat-button type="button" (click)="store.retry()">Retry</button>
+      <button mat-flat-button type="button" (click)="reload()">Retry</button>
     </div>
   } @else if (store.status() === 'success' && store.items().length === 0) {
     <p class="empty">No status changes yet</p>
@@ -13,12 +13,20 @@
       <mat-progress-bar mode="indeterminate" aria-label="Loading history" />
     }
 
+    @if (store.status() === 'error') {
+      <div class="message" role="alert">
+        <p>{{ store.errorMessage() }} The entries below may be out of date.</p>
+        <button mat-flat-button type="button" (click)="reload()">Retry</button>
+      </div>
+    }
+
     <ol class="entries" [class.loading]="store.status() === 'loading'">
       @for (entry of store.items(); track entry.id) {
         <li class="entry">
           <div class="change">
             <app-status-pill [value]="entry.previousStatus" />
-            <span aria-label="changed to">→</span>
+            <span aria-hidden="true">→</span>
+            <span class="visually-hidden">changed to</span>
             <app-status-pill [value]="entry.newStatus" />
           </div>
           <p class="meta">
@@ -39,7 +47,7 @@
       <button
         mat-stroked-button
         type="button"
-        [disabled]="store.loadingMore()"
+        [disabled]="store.loadingMore() || store.status() !== 'success'"
         (click)="store.loadMore()"
       >
         {{ store.loadMoreFailed() ? 'Retry' : 'Load older' }}
