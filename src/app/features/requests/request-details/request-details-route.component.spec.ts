@@ -7,6 +7,7 @@ import { routes } from '../../../app.routes';
 import { RequestsApiService } from '../../../core/api/requests-api.service';
 import { PagedResult } from '../../../core/models/paged-result.model';
 import { RequestQuery } from '../../../core/models/request-query.model';
+import { RequestStats } from '../../../core/models/request-stats.model';
 import { RequestDto, UpdateStatusRequest } from '../../../core/models/request.model';
 
 function aRequest(id: number, overrides: Partial<RequestDto> = {}): RequestDto {
@@ -28,6 +29,7 @@ class FakeApi {
   readonly queries: RequestQuery[] = [];
   readonly loadedIds: number[] = [];
   readonly patches: UpdateStatusRequest[] = [];
+  statsCalls = 0;
 
   getPaged(query: RequestQuery): Observable<PagedResult<RequestDto>> {
     this.queries.push(query);
@@ -36,6 +38,16 @@ class FakeApi {
 
   getAssignees(): Observable<string[]> {
     return of([]);
+  }
+
+  getStats(): Observable<RequestStats> {
+    this.statsCalls++;
+    return of({
+      asOf: '2026-01-01T00:00:00Z',
+      countByStatus: { New: 1, InProgress: 0, Waiting: 0, Completed: 0 },
+      openRequestAge: { underSevenDays: 1, sevenToUnderThirtyDays: 0, thirtyDaysOrMore: 0 },
+      topAssignees: [{ assignedTo: 'Dana', openCount: 1 }],
+    });
   }
 
   getById(id: number): Observable<RequestDto> {
@@ -146,5 +158,7 @@ describe('RequestDetailsRouteComponent', () => {
 
     expect(api.patches).toEqual([{ status: 'Waiting', version: 'v1', changedBy: 'Lee' }]);
     expect(api.queries).toHaveLength(2);
+    // Once when the list opened, once after the save.
+    expect(api.statsCalls).toBe(2);
   });
 });

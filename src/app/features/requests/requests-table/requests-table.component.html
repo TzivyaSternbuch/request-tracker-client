@@ -46,9 +46,7 @@
           @case ('assignedTo') {
             @if (initials(row.assignedTo); as letters) {
               <span class="assignee no-wrap">
-                <span class="avatar avatar--{{ avatarTone(row.assignedTo) }}" aria-hidden="true">{{
-                  letters
-                }}</span>
+                <span class="avatar" aria-hidden="true">{{ letters }}</span>
                 <span>{{ row.assignedTo }}</span>
               </span>
             }

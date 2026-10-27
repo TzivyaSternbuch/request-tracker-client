@@ -9,11 +9,14 @@ import { Observable, of } from 'rxjs';
 import { routes } from '../../../app.routes';
 import { RequestsApiService } from '../../../core/api/requests-api.service';
 import { PagedResult } from '../../../core/models/paged-result.model';
+import { LoadStatus } from '../../../core/models/load-status.model';
 import { DEFAULT_QUERY, RequestQuery } from '../../../core/models/request-query.model';
+import { RequestStats } from '../../../core/models/request-stats.model';
 import { RequestDto } from '../../../core/models/request.model';
+import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsFilterBarComponent } from '../requests-filter-bar/requests-filter-bar.component';
 import { RequestsTableComponent } from '../requests-table/requests-table.component';
-import { LoadStatus, RequestsStore } from '../requests.store';
+import { RequestsStore } from '../requests.store';
 import { RequestsListComponent } from './requests-list.component';
 
 const ROW: RequestDto = {
@@ -51,18 +54,40 @@ class FakeRequestsStore {
   readonly submitText = vi.fn();
 }
 
+class FakeRequestStatsStore {
+  readonly status = signal<LoadStatus>('idle');
+  readonly stats = signal<RequestStats | null>(null);
+  readonly errorMessage = signal<string | null>(null);
+
+  readonly refresh = vi.fn();
+}
+
+const STATS: RequestStats = {
+  asOf: '2026-10-27T12:00:00+00:00',
+  countByStatus: { New: 1, InProgress: 2, Waiting: 3, Completed: 4 },
+  openRequestAge: { underSevenDays: 1, sevenToUnderThirtyDays: 2, thirtyDaysOrMore: 3 },
+  topAssignees: [{ assignedTo: 'dana', openCount: 6 }],
+};
+
 describe('RequestsListComponent', () => {
   let store: FakeRequestsStore;
+  let statsStore: FakeRequestStatsStore;
   let fixture: ComponentFixture<RequestsListComponent>;
   let root: HTMLElement;
 
   beforeEach(() => {
     store = new FakeRequestsStore();
-    // Replaces only the store, so the component's other providers (the paginator labels) stay real.
+    statsStore = new FakeRequestStatsStore();
+    // Replaces only the stores, so the component's other providers (the paginator labels) stay real.
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     TestBed.overrideComponent(RequestsListComponent, {
-      remove: { providers: [RequestsStore] },
-      add: { providers: [{ provide: RequestsStore, useValue: store }] },
+      remove: { providers: [RequestsStore, RequestStatsStore] },
+      add: {
+        providers: [
+          { provide: RequestsStore, useValue: store },
+          { provide: RequestStatsStore, useValue: statsStore },
+        ],
+      },
     });
     fixture = TestBed.createComponent(RequestsListComponent);
     root = fixture.nativeElement as HTMLElement;
@@ -243,6 +268,39 @@ describe('RequestsListComponent', () => {
     expect(store.toggleSort).toHaveBeenCalledExactlyOnceWith('title');
   });
 
+  it('render_StatsLoaded_ShowsOverviewAboveTable', async () => {
+    statsStore.status.set('success');
+    statsStore.stats.set(STATS);
+    await render({ status: 'success', items: [ROW], totalCount: 1 });
+
+    const overview = element('app-request-stats');
+    const table = element('table');
+
+    expect(overview.textContent).toContain('All requests overview');
+    expect(overview.closest('section.card')).toBeNull();
+    expect(overview.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('render_StatsFailed_StillShowsTheList', async () => {
+    statsStore.status.set('error');
+    statsStore.errorMessage.set('Stats down');
+    await render({ status: 'success', items: [ROW], totalCount: 1 });
+
+    expect(element('app-request-stats [role="alert"]').textContent).toContain('Stats down');
+    expect(root.querySelectorAll('tbody tr').length).toBe(1);
+  });
+
+  it('statsRetry_Click_RefreshesStatsOnly', async () => {
+    statsStore.status.set('error');
+    statsStore.errorMessage.set('Stats down');
+    await render({ status: 'success', items: [ROW], totalCount: 1 });
+
+    button(element('app-request-stats'), 'Retry').click();
+
+    expect(statsStore.refresh).toHaveBeenCalledOnce();
+    expect(store.retry).not.toHaveBeenCalled();
+  });
+
   it('render_NoSort_ShowsDefaultNoteAndDisablesReset', async () => {
     await render({ status: 'success', items: [ROW], totalCount: 1 });
 
@@ -276,6 +334,10 @@ describe('RequestsListComponent on its route', () => {
 
     getAssignees(): Observable<string[]> {
       return of([]);
+    }
+
+    getStats(): Observable<RequestStats> {
+      return of(STATS);
     }
   }
 

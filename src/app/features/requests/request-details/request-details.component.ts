@@ -15,6 +15,7 @@ import { ActingAsService } from '../../../core/acting-as.service';
 import { REQUEST_STATUSES, RequestStatus } from '../../../core/models/request.model';
 import { StatusPillComponent } from '../../../shared/status-pill/status-pill.component';
 import { valueLabel } from '../../../shared/value-label';
+import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsStore } from '../requests.store';
 import { RequestDetailsStore } from './request-details.store';
 
@@ -39,6 +40,7 @@ export class RequestDetailsComponent {
   private readonly actingAs = inject(ActingAsService);
   private readonly dialogRef = inject(MatDialogRef);
   private readonly listStore = inject(RequestsStore, { optional: true });
+  private readonly statsStore = inject(RequestStatsStore, { optional: true });
   private readonly data = inject<RequestDetailsData>(MAT_DIALOG_DATA);
 
   protected readonly statuses = REQUEST_STATUSES;
@@ -66,6 +68,7 @@ export class RequestDetailsComponent {
     this.store.updated$.pipe(takeUntilDestroyed()).subscribe(() => {
       this.panelOpen.set(false);
       this.listStore?.retry();
+      this.statsStore?.refresh();
     });
   }
 

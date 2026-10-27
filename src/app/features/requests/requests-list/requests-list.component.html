@@ -1,3 +1,11 @@
+<app-request-stats
+  class="overview"
+  [stats]="statsStore.stats()"
+  [status]="statsStore.status()"
+  [errorMessage]="statsStore.errorMessage()"
+  (retry)="statsStore.refresh()"
+/>
+
 <section class="card">
   <!-- The bar puts the projected title on the left of the header row and its search box on the right. -->
   <app-requests-filter-bar
@@ -27,8 +35,6 @@
       </button>
     </div>
   </app-requests-filter-bar>
-
-  <!-- Stats KPI cards (stats task) go here -->
 
   @if (store.status() === 'error') {
     <div class="message" role="alert">

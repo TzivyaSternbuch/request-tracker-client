@@ -35,6 +35,12 @@
   --app-tone-red-text: #b42318;
   --app-tone-gray-background: #eef0f3;
   --app-tone-gray-text: #57606a;
+
+  // Lighter shades of the same hues for charts: the text colors above are too dark for a ring or a bar.
+  --app-tone-blue-chart: #6ea8f7;
+  --app-tone-amber-chart: #f6c453;
+  --app-tone-green-chart: #6fcf8e;
+  --app-tone-gray-chart: #c3c9d2;
 }
 
 html {

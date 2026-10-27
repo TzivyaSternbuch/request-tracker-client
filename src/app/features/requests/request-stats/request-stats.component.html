@@ -1,0 +1,85 @@
+<section class="stats" aria-labelledby="stats-title">
+  <h2 id="stats-title">All requests overview</h2>
+
+  @if (status() === 'error') {
+    <div class="message" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button mat-flat-button type="button" (click)="retry.emit()">Retry</button>
+    </div>
+  } @else if (stats() === null) {
+    <div class="cards" aria-busy="true">
+      <span class="sr-only" role="status">Loading overview</span>
+      @for (lines of placeholderCards; track $index) {
+        <div class="card">
+          @for (line of lines; track line) {
+            <div class="placeholder"></div>
+          }
+        </div>
+      }
+    </div>
+  } @else if (noRequests()) {
+    <p class="message">No requests yet</p>
+  } @else {
+    <div class="cards">
+      <div class="card">
+        <h3>By status</h3>
+        <div class="status">
+          <div class="donut">
+            <svg viewBox="0 0 42 42" role="img" aria-label="Share of requests by status">
+              <circle class="ring-track" cx="21" cy="21" r="15.915" />
+              @for (slice of statusSlices(); track slice.label) {
+                @if (slice.length > 0) {
+                  <circle
+                    class="ring-slice tone--{{ slice.tone }}"
+                    cx="21"
+                    cy="21"
+                    r="15.915"
+                    [attr.stroke-dasharray]="slice.length + ' ' + (ringLength - slice.length)"
+                    [attr.stroke-dashoffset]="slice.offset"
+                  />
+                }
+              }
+            </svg>
+            <div class="donut-total">
+              <strong>{{ total() | number }}</strong>
+              <span>Total requests</span>
+            </div>
+          </div>
+          <ul class="legend">
+            @for (slice of statusSlices(); track slice.label) {
+              <li>
+                <span class="dot tone--{{ slice.tone }}"></span>
+                <span>{{ slice.label }}</span>
+                <span class="count">{{ slice.count | number }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Open requests by age</h3>
+        @for (row of ageRows(); track row.label) {
+          <div class="age-row">
+            <span>{{ row.label }}</span>
+            <span class="bar"><i [style.width.%]="row.percent"></i></span>
+            <span class="count">{{ row.count | number }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="card">
+        <h3>Top 3 assignees (open)</h3>
+        @for (row of assigneeRows(); track row.name) {
+          <div class="assignee-row">
+            <span class="avatar" aria-hidden="true">{{ row.initials }}</span>
+            <span class="name">{{ row.name }}</span>
+            <span class="count">{{ row.count | number }}</span>
+          </div>
+        } @empty {
+          <p class="none">No open requests</p>
+        }
+      </div>
+    </div>
+  }
+</section>
