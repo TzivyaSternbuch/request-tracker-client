@@ -27,6 +27,8 @@ export class RequestHistoryStore {
   private readonly errorMessageSignal = signal<string | null>(null);
   private readonly loadingMoreSignal = signal(false);
   private readonly loadMoreFailedSignal = signal(false);
+  /** The last page appended. Pages are counted, not derived from the items, which skip repeated entries. */
+  private readonly lastPageSignal = signal(0);
 
   private readonly query$ = new Subject<PageQuery>();
   private currentId: number | null = null;
@@ -37,7 +39,9 @@ export class RequestHistoryStore {
   readonly errorMessage = this.errorMessageSignal.asReadonly();
   readonly loadingMore = this.loadingMoreSignal.asReadonly();
   readonly loadMoreFailed = this.loadMoreFailedSignal.asReadonly();
-  readonly hasMore = computed(() => this.itemsSignal().length < this.totalCountSignal());
+  readonly hasMore = computed(
+    () => this.lastPageSignal() * HISTORY_PAGE_SIZE < this.totalCountSignal(),
+  );
 
   constructor() {
     this.query$
@@ -64,6 +68,7 @@ export class RequestHistoryStore {
     if (id !== this.currentId) {
       this.itemsSignal.set([]);
       this.totalCountSignal.set(0);
+      this.lastPageSignal.set(0);
     }
     this.currentId = id;
     this.statusSignal.set('loading');
@@ -78,9 +83,7 @@ export class RequestHistoryStore {
 
     this.loadingMoreSignal.set(true);
     this.loadMoreFailedSignal.set(false);
-    // More entries exist, so every page loaded so far was full: the next page follows from the item count.
-    const nextPage = Math.floor(this.itemsSignal().length / HISTORY_PAGE_SIZE) + 1;
-    this.query$.next({ id: this.currentId, page: nextPage });
+    this.query$.next({ id: this.currentId, page: this.lastPageSignal() + 1 });
   }
 
   private onResult(result: PageResult): void {
@@ -96,9 +99,13 @@ export class RequestHistoryStore {
       return;
     }
 
-    this.itemsSignal.update((current) =>
-      firstPage ? result.items : [...current, ...result.items],
-    );
+    // A status change since the previous page shifts every entry down, so this page can repeat one already shown.
+    this.itemsSignal.update((current) => {
+      if (firstPage) return result.items;
+      const shown = new Set(current.map((entry) => entry.id));
+      return [...current, ...result.items.filter((entry) => !shown.has(entry.id))];
+    });
+    this.lastPageSignal.set(result.query.page);
     this.totalCountSignal.set(result.totalCount);
     this.errorMessageSignal.set(null);
     this.statusSignal.set('success');
