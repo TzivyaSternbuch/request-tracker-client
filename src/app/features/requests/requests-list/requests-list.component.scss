@@ -1,18 +1,24 @@
+@use '@angular/material' as mat;
+
 .card {
   box-sizing: border-box;
-  max-width: 1200px;
+  max-width: var(--app-content-max-width);
   margin: 0 auto;
-  padding: 18px;
+  padding: 16px 20px 4px;
   background: var(--app-card-background);
   border: 1px solid var(--app-card-border);
-  border-radius: 14px;
+  border-radius: 10px;
 }
 
 .card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+
   h2 {
     margin: 0;
-    font-size: 20px;
-    line-height: 28px;
+    font-size: 22px;
+    line-height: 30px;
     font-weight: 600;
   }
 }
@@ -21,6 +27,28 @@
   margin: 0;
   font-size: 13px;
   color: var(--app-text-muted);
+}
+
+// Secondary to the filters: muted 12px text and a small text button, grey while the default order is on.
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  @include mat.button-overrides(
+    (
+      text-label-text-size: 12px,
+      text-container-height: 28px,
+      text-horizontal-padding: 8px,
+      text-label-text-color: var(--app-link),
+      text-disabled-label-text-color: var(--app-text-muted),
+    )
+  );
+}
+
+.default-note {
+  color: var(--app-text-muted);
+  font-size: 12px;
 }
 
 .progress {

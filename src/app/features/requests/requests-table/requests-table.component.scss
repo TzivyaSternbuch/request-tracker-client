@@ -1,17 +1,44 @@
-.sort-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.default-note {
-  color: var(--app-text-muted);
-  font: var(--mat-sys-body-small);
-}
-
 table {
   width: 100%;
+}
+
+.header-row {
+  background: var(--app-table-header-background);
+}
+
+th,
+td {
+  padding: 6px 12px;
+  vertical-align: middle;
+}
+
+// Fixed widths for the short columns; Title and Organization share what is left, Title a little more.
+.mat-column-id {
+  width: 64px;
+}
+
+.mat-column-title {
+  width: 30%;
+  min-width: 220px;
+}
+
+.mat-column-organizationName {
+  width: 20%;
+  min-width: 150px;
+}
+
+.mat-column-status,
+.mat-column-priority {
+  width: 104px;
+}
+
+.mat-column-assignedTo {
+  width: 170px;
+}
+
+.mat-column-createdAt,
+.mat-column-updatedAt {
+  width: 120px;
 }
 
 table.loading tbody {
@@ -23,31 +50,91 @@ table.loading tbody {
   background: var(--app-row-hover);
 }
 
+// The header label is a button: it darkens on hover, shows a faint ↕ hint when unsorted, and turns the accent
+// colour when sorted. The precedence number sits in a small circle after the arrow.
 .sort-button {
   all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   cursor: pointer;
   font: inherit;
-  text-transform: uppercase;
+  white-space: nowrap;
+  border-radius: 4px;
+
+  &:hover {
+    color: var(--app-text);
+  }
+
+  &:not(.sorted)::after {
+    content: '↕';
+    color: var(--app-text-muted);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  &:not(.sorted):hover::after {
+    opacity: 1;
+  }
+
+  &.sorted {
+    color: var(--app-link);
+  }
 }
 
 .sort-button:focus-visible {
-  outline: 2px solid var(--mat-sys-primary);
+  outline: 2px solid var(--app-link);
+  outline-offset: 2px;
+}
+
+.utc {
+  font-size: 10.5px;
+  font-weight: 400;
+  color: var(--app-text-muted);
+}
+
+.sort-level {
+  display: inline-block;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 15px;
+  text-align: center;
+  color: var(--app-card-background);
+  background: var(--app-link);
 }
 
 .muted {
   color: var(--app-text-muted);
 }
 
-.secondary {
-  color: var(--app-text-secondary);
-}
-
 .no-wrap {
   white-space: nowrap;
 }
 
+// Up to two lines; the full title is in the tooltip.
 .title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
   font-weight: 500;
+  line-height: 20px;
+}
+
+.date {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 13px;
+  line-height: 17px;
+}
+
+.time {
+  color: var(--app-text-muted);
+  font-size: 12px;
 }
 
 .assignee {

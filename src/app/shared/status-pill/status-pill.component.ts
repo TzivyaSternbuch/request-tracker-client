@@ -24,7 +24,7 @@ const TONES: Record<PillValue, Tone> = {
       display: inline-block;
       font-size: 12px;
       line-height: 16px;
-      padding: 3px 10px;
+      padding: 2px 8px;
       border-radius: 999px;
       font-weight: 500;
       white-space: nowrap;

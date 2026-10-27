@@ -4,7 +4,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .search {
@@ -15,11 +15,17 @@
     box-sizing: border-box;
     width: 260px;
     max-width: 100%;
-    padding: 8px 12px 8px 34px;
+    padding: 7px 12px 7px 34px;
     font: inherit;
     font-size: 14px;
     border: 1px solid var(--app-control-border);
     border-radius: 8px;
+
+    &:focus {
+      outline: none;
+      border-color: var(--app-link);
+      box-shadow: 0 0 0 3px var(--app-chip-active-background);
+    }
   }
 }
 
@@ -37,28 +43,43 @@
   pointer-events: none;
 }
 
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 6px;
 }
 
+// An add control is a dashed outline in muted text; an active filter is a filled soft-blue chip.
 .chip {
   position: relative;
   display: inline-flex;
   align-items: center;
-  font-size: 13px;
+  font-size: 12.5px;
+  line-height: 18px;
   color: var(--app-chip-text);
   background: var(--app-card-background);
-  border: 1px solid var(--app-control-border);
+  border: 1px dashed var(--app-control-border);
   border-radius: 999px;
+
+  &:hover {
+    border-color: var(--app-text-muted);
+  }
 
   &.on {
     color: var(--app-link);
+    font-weight: 500;
     background: var(--app-chip-active-background);
-    border-color: var(--app-chip-active-border);
+    border: 1px solid var(--app-chip-active-border);
   }
 }
 
@@ -73,7 +94,7 @@
 }
 
 .chip-body {
-  padding: 5px 12px;
+  padding: 3px 10px;
   border-radius: 999px;
 }
 
@@ -82,7 +103,7 @@
 }
 
 .chip-remove {
-  padding: 5px 10px 5px 4px;
+  padding: 3px 9px 3px 4px;
   border-radius: 0 999px 999px 0;
 }
 
@@ -99,9 +120,11 @@
 }
 
 .clear-all {
-  margin-left: auto;
-  padding: 5px 0;
-  font-size: 13px;
+  // Right after the chips, set off by a thin divider, so it reads as part of the active filters.
+  margin-left: 4px;
+  padding: 3px 0 3px 10px;
+  border-left: 1px solid var(--app-card-border);
+  font-size: 12.5px;
   color: var(--app-link);
 }
 

@@ -1,12 +1,3 @@
-<div class="sort-row">
-  <button mat-button type="button" [disabled]="sort().length === 0" (click)="sortReset.emit()">
-    Reset sorting
-  </button>
-  @if (sort().length === 0) {
-    <span class="default-note">Default order: newest first</span>
-  }
-</div>
-
 <table mat-table [dataSource]="items()" [class.loading]="loading()">
   @for (column of columns; track column.field) {
     <ng-container [matColumnDef]="column.field">
@@ -14,14 +5,17 @@
         <button
           type="button"
           class="sort-button"
+          [class.sorted]="levelOf(column.field)"
           [attr.aria-label]="ariaLabel(column)"
           (click)="sortToggle.emit(column.field)"
         >
           {{ column.label }}
           @if (levelOf(column.field); as level) {
-            <span aria-hidden="true">{{ level.direction === 'asc' ? '↑' : '↓' }}</span>
+            <span class="sort-arrow" aria-hidden="true">{{
+              level.direction === 'asc' ? '↑' : '↓'
+            }}</span>
             @if (sort().length > 1) {
-              <sup aria-hidden="true">{{ level.number }}</sup>
+              <span class="sort-level" aria-hidden="true">{{ level.number }}</span>
             }
           }
         </button>
@@ -32,7 +26,7 @@
             <span class="muted no-wrap">{{ row.id }}</span>
           }
           @case ('title') {
-            <span class="title">{{ row.title }}</span>
+            <span class="title" [attr.title]="row.title">{{ row.title }}</span>
           }
           @case ('organizationName') {
             {{ row.organizationName }}
@@ -54,19 +48,21 @@
             }
           }
           @case ('createdAt') {
-            <span class="secondary no-wrap">{{
-              row.createdAt | date: 'yyyy-MM-dd HH:mm' : 'UTC'
-            }}</span>
+            <span class="date no-wrap">
+              {{ row.createdAt | date: 'yyyy-MM-dd' : 'UTC' }}
+              <span class="time">{{ row.createdAt | date: 'HH:mm' : 'UTC' }}</span>
+            </span>
           }
           @case ('updatedAt') {
-            <span class="secondary no-wrap">{{
-              row.updatedAt | date: 'yyyy-MM-dd HH:mm' : 'UTC'
-            }}</span>
+            <span class="date no-wrap">
+              {{ row.updatedAt | date: 'yyyy-MM-dd' : 'UTC' }}
+              <span class="time">{{ row.updatedAt | date: 'HH:mm' : 'UTC' }}</span>
+            </span>
           }
         }
       </td>
     </ng-container>
   }
-  <tr mat-header-row *matHeaderRowDef="fields"></tr>
+  <tr mat-header-row class="header-row" *matHeaderRowDef="fields"></tr>
   <tr mat-row class="row" *matRowDef="let row; columns: fields"></tr>
 </table>

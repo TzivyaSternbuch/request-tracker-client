@@ -18,6 +18,19 @@
         <p class="total">{{ store.totalCount() | number }} total</p>
       }
     </header>
+    <div barEnd class="sort-controls">
+      @if (store.query().sort.length === 0) {
+        <span class="default-note">Default order: newest first</span>
+      }
+      <button
+        mat-button
+        type="button"
+        [disabled]="store.query().sort.length === 0"
+        (click)="store.resetSort()"
+      >
+        Reset sorting
+      </button>
+    </div>
   </app-requests-filter-bar>
 
   <!-- Stats KPI cards (stats task) go here -->
@@ -48,7 +61,6 @@
         [sort]="store.query().sort"
         [loading]="loading()"
         (sortToggle)="store.toggleSort($event)"
-        (sortReset)="store.resetSort()"
       />
     }
 

@@ -12,15 +12,18 @@
   --app-card-background: #fff;
   --app-card-border: #e3e6ea;
   --app-divider: #eef0f3;
-  --app-text: #1f2328;
-  --app-text-secondary: #57606a;
-  --app-text-muted: #8c959f;
+  --app-text: #1e293b;
+  --app-text-secondary: #475569;
+  --app-text-muted: #64748b;
   --app-row-hover: #f8f9fb;
-  --app-control-border: #d0d7de;
-  --app-chip-text: #424a53;
-  --app-chip-active-background: #eef4ff;
-  --app-chip-active-border: #9ec1ff;
-  --app-link: #1d4ed8;
+  --app-control-border: #d8dde3;
+  --app-chip-text: #475569;
+  --app-chip-active-background: #eef3fa;
+  --app-chip-active-border: #c3d3ea;
+  --app-link: #2a5a9e;
+  --app-table-header-background: #fafbfc;
+  // Shared by the app bar and the card, so the title lines up with the card's left edge.
+  --app-content-max-width: 1440px;
 
   --app-tone-blue-background: #e6f0ff;
   --app-tone-blue-text: #1d4ed8;
@@ -59,14 +62,14 @@ html {
     (
       background-color: var(--app-card-background),
       header-headline-color: var(--app-text-secondary),
-      header-headline-size: 12px,
-      header-headline-weight: 600,
-      header-headline-tracking: 0.03em,
-      header-container-height: 44px,
+      header-headline-size: 13px,
+      header-headline-weight: 500,
+      header-headline-tracking: 0,
+      header-container-height: 40px,
       row-item-label-text-color: var(--app-text),
       row-item-label-text-size: 14px,
       row-item-outline-color: var(--app-divider),
-      row-item-container-height: 48px,
+      row-item-container-height: 46px,
     )
   );
 

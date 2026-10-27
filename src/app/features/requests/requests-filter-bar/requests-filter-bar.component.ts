@@ -100,6 +100,7 @@ export class RequestsFilterBarComponent {
   protected readonly assigneeOptions = computed(() => {
     const known = new Set(this.assignees());
     const extra = this.assigneeSelection().filter((name) => !known.has(name));
+    // Narrows only the menu's options (the unpaged assignees endpoint, tens of names), not request data.
     const query = this.assigneeQuery().trim().toLowerCase();
     return [...extra, ...this.assignees()].filter((name) => name.toLowerCase().includes(query));
   });

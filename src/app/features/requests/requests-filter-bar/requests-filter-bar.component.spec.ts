@@ -155,9 +155,13 @@ describe('RequestsFilterBarComponent', () => {
       MatMenuHarness.with({ selector: '[data-chip="organization"]' }),
     );
 
-    textInput('organization').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+
+    textInput('organization').dispatchEvent(enter);
     await fixture.whenStable();
 
+    // Without preventDefault, a real Enter goes on to click the focused chip and reopens the menu.
+    expect(enter.defaultPrevented).toBe(true);
     expect(await menu.isOpen()).toBe(false);
   });
 

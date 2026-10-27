@@ -233,7 +233,6 @@ describe('RequestsListComponent', () => {
     bar.filtersChange.emit({ priority: ['High'] });
     bar.clear.emit();
     table.sortToggle.emit('title');
-    table.sortReset.emit();
 
     expect(store.setSearchDraft).toHaveBeenCalledExactlyOnceWith('acme ');
     expect(store.setOrganizationDraft).toHaveBeenCalledExactlyOnceWith('glob');
@@ -241,6 +240,26 @@ describe('RequestsListComponent', () => {
     expect(store.setFilters).toHaveBeenCalledExactlyOnceWith({ priority: ['High'] });
     expect(store.clearFilters).toHaveBeenCalledOnce();
     expect(store.toggleSort).toHaveBeenCalledExactlyOnceWith('title');
+  });
+
+  it('render_NoSort_ShowsDefaultNoteAndDisablesReset', async () => {
+    await render({ status: 'success', items: [ROW], totalCount: 1 });
+
+    expect(element('.sort-controls').textContent).toContain('Default order: newest first');
+    expect(button(root, 'Reset sorting').disabled).toBe(true);
+  });
+
+  it('resetClick_WithSort_HidesDefaultNoteAndCallsResetSort', async () => {
+    await render({
+      status: 'success',
+      items: [ROW],
+      totalCount: 1,
+      query: { sort: [{ field: 'id', direction: 'asc' }] },
+    });
+
+    button(root, 'Reset sorting').click();
+
+    expect(element('.sort-controls').textContent).not.toContain('Default order');
     expect(store.resetSort).toHaveBeenCalledOnce();
   });
 });
