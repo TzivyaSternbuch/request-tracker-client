@@ -29,6 +29,7 @@ const ROW: RequestDto = {
   createdAt: '2026-01-02T03:04:05+00:00',
   updatedAt: '2026-01-02T03:04:05+00:00',
   version: 'AAAAAAAAB9E=',
+  allowedStatuses: ['InProgress'],
 };
 
 // The store's public surface the page reads, with state set by each test and actions recorded.

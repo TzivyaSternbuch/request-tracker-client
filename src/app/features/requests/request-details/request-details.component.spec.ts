@@ -21,6 +21,7 @@ const REQUEST: RequestDto = {
   createdAt: '2026-01-31T23:59:00+00:00',
   updatedAt: '2026-02-01T08:05:00+00:00',
   version: 'AAAAAAAAB9E=',
+  allowedStatuses: ['InProgress'],
 };
 
 // The real history component is covered by its own spec; here only what the dialog hands it matters.
@@ -157,15 +158,39 @@ describe('RequestDetailsComponent', () => {
     expect(text).not.toContain(REQUEST.version);
   });
 
-  it('statusPanel_Open_OffersAllStatuses', async () => {
+  function optionLabels(): (string | undefined)[] {
+    return Array.from(root.querySelectorAll('select option')).map((o) => o.textContent?.trim());
+  }
+
+  it('statusPanel_Open_OffersOnlyAllowedStatuses', async () => {
+    store.request.set({ ...REQUEST, status: 'Completed', allowedStatuses: ['InProgress'] });
     await render();
 
     await openPanel();
 
-    const options = Array.from(root.querySelectorAll('select option')).map((o) =>
-      o.textContent?.trim(),
-    );
-    expect(options).toEqual(['', 'New', 'In progress', 'Waiting', 'Completed']);
+    expect(optionLabels()).toEqual(['', 'In progress']);
+  });
+
+  it('statusPanel_RequestReloaded_FollowsNewAllowedStatuses', async () => {
+    await render();
+    await openPanel();
+
+    store.request.set({ ...REQUEST, status: 'InProgress', allowedStatuses: ['Waiting', 'Completed'] });
+    await fixture.whenStable();
+
+    expect(optionLabels()).toEqual(['', 'Waiting', 'Completed']);
+  });
+
+  it('statusPanel_DraftNoLongerAllowedAfterReload_DisablesSave', async () => {
+    TestBed.inject(ActingAsService).setName('Dana');
+    await render();
+    await openPanel();
+    await chooseStatus('InProgress');
+
+    store.request.set({ ...REQUEST, status: 'InProgress', allowedStatuses: ['Waiting', 'Completed'] });
+    await fixture.whenStable();
+
+    expect(button('Save changes').disabled).toBe(true);
   });
 
   it('statusPanel_Reopened_StartsFromToolbarName', async () => {
@@ -195,7 +220,7 @@ describe('RequestDetailsComponent', () => {
     await render();
     await openPanel();
 
-    await chooseStatus('Waiting');
+    await chooseStatus('InProgress');
     await typeName('   ');
 
     expect(button('Save changes').disabled).toBe(true);
