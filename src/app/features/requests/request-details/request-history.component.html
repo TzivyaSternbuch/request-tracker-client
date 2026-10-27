@@ -1,0 +1,49 @@
+<section class="history" aria-labelledby="history-heading">
+  <h3 id="history-heading" class="heading">Status history</h3>
+
+  @if (store.status() === 'error' && store.items().length === 0) {
+    <div class="message" role="alert">
+      <p>{{ store.errorMessage() }}</p>
+      <button mat-flat-button type="button" (click)="store.retry()">Retry</button>
+    </div>
+  } @else if (store.status() === 'success' && store.items().length === 0) {
+    <p class="empty">No status changes yet</p>
+  } @else {
+    @if (store.status() === 'loading') {
+      <mat-progress-bar mode="indeterminate" aria-label="Loading history" />
+    }
+
+    <ol class="entries" [class.loading]="store.status() === 'loading'">
+      @for (entry of store.items(); track entry.id) {
+        <li class="entry">
+          <div class="change">
+            <app-status-pill [value]="entry.previousStatus" />
+            <span aria-label="changed to">→</span>
+            <app-status-pill [value]="entry.newStatus" />
+          </div>
+          <p class="meta">
+            {{ entry.changedBy }} · {{ entry.changedAt | date: 'd MMM y, HH:mm' : 'UTC' }}
+          </p>
+        </li>
+      }
+    </ol>
+
+    @if (store.items().length > 0) {
+      <p class="count">Showing {{ store.items().length }} of {{ store.totalCount() }}</p>
+    }
+
+    @if (store.hasMore()) {
+      @if (store.loadMoreFailed()) {
+        <p class="error" role="alert">Couldn't load older entries.</p>
+      }
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="store.loadingMore()"
+        (click)="store.loadMore()"
+      >
+        {{ store.loadMoreFailed() ? 'Retry' : 'Load older' }}
+      </button>
+    }
+  }
+</section>

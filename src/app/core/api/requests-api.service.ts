@@ -5,6 +5,7 @@ import { PagedResult } from '../models/paged-result.model';
 import { RequestQuery } from '../models/request-query.model';
 import { RequestStats } from '../models/request-stats.model';
 import { RequestDto, UpdateStatusRequest } from '../models/request.model';
+import { StatusHistoryDto } from '../models/status-history.model';
 
 @Injectable({ providedIn: 'root' })
 export class RequestsApiService {
@@ -20,6 +21,16 @@ export class RequestsApiService {
 
   updateStatus(id: number, body: UpdateStatusRequest): Observable<RequestDto> {
     return this.http.patch<RequestDto>(`/api/requests/${id}/status`, body);
+  }
+
+  getHistory(
+    id: number,
+    page: number,
+    pageSize: number,
+  ): Observable<PagedResult<StatusHistoryDto>> {
+    return this.http.get<PagedResult<StatusHistoryDto>>(`/api/requests/${id}/history`, {
+      params: new HttpParams().set('page', page).set('pageSize', pageSize),
+    });
   }
 
   getAssignees(): Observable<string[]> {
