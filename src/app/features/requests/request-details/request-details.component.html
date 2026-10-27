@@ -1,0 +1,122 @@
+<div class="details">
+  <header class="header">
+    <div class="heading">
+      @if (store.request(); as request) {
+        <p class="number">REQUEST #{{ request.id }}</p>
+        <h2 class="title">{{ request.title }}</h2>
+      } @else {
+        <p class="number">REQUEST</p>
+      }
+    </div>
+
+    @if (showContent() && store.request(); as current) {
+      <div class="status-area">
+        <app-status-pill [value]="current.status" />
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Change status"
+          [attr.aria-expanded]="panelOpen()"
+          (click)="openPanel()"
+        >
+          ✎
+        </button>
+
+        @if (panelOpen()) {
+          <form class="panel" aria-label="Change status" (submit)="$event.preventDefault(); save()">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>New status</mat-label>
+              <select matNativeControl [disabled]="saving()" (change)="onStatusChange($event)">
+                <option value="" [selected]="draftStatus() === ''" disabled></option>
+                @for (status of statuses; track status) {
+                  <option [value]="status" [selected]="draftStatus() === status">
+                    {{ valueLabel(status) }}
+                  </option>
+                }
+              </select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Changed by</mat-label>
+              <input
+                matInput
+                maxlength="100"
+                [value]="draftName()"
+                [disabled]="saving()"
+                (input)="onNameInput($event)"
+              />
+            </mat-form-field>
+
+            @if (store.saveError(); as error) {
+              <p class="error" role="alert">{{ error }}</p>
+            }
+
+            <div class="actions">
+              <button mat-button type="button" [disabled]="saving()" (click)="closePanel()">
+                Cancel
+              </button>
+              <button mat-flat-button type="submit" [disabled]="!canSave()">Save changes</button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+
+    <button mat-icon-button type="button" aria-label="Close" (click)="close()">✕</button>
+  </header>
+
+  @if (store.conflict()) {
+    <p class="conflict" role="alert">
+      Someone else changed this request. Showing the latest version.
+    </p>
+  }
+
+  @switch (store.loadState()) {
+    @case ('notFound') {
+      <div class="message">
+        <p>This request doesn't exist or was removed</p>
+        <button mat-stroked-button type="button" (click)="close()">Close</button>
+      </div>
+    }
+    @case ('error') {
+      <div class="message" role="alert">
+        <p>{{ store.errorMessage() }}</p>
+        <button mat-flat-button type="button" (click)="store.retry()">Retry</button>
+      </div>
+    }
+    @default {
+      @if (store.loadState() === 'loading') {
+        <mat-progress-bar mode="indeterminate" aria-label="Loading request" />
+      }
+      @if (store.request(); as request) {
+        <dl class="fields" [class.loading]="store.loadState() === 'loading'">
+          <div>
+            <dt>Organization</dt>
+            <dd>{{ request.organizationName }}</dd>
+          </div>
+          <div>
+            <dt>Assigned to</dt>
+            <dd class="assignee">
+              @if (initials(request.assignedTo); as letters) {
+                <span class="avatar" aria-hidden="true">{{ letters }}</span>
+              }
+              {{ request.assignedTo }}
+            </dd>
+          </div>
+          <div>
+            <dt>Priority</dt>
+            <dd><app-status-pill [value]="request.priority" /></dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd>{{ request.createdAt | date: 'yyyy-MM-dd HH:mm' : 'UTC' }} UTC</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd>{{ request.updatedAt | date: 'yyyy-MM-dd HH:mm' : 'UTC' }} UTC</dd>
+          </div>
+        </dl>
+      }
+    }
+  }
+</div>
