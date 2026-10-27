@@ -102,4 +102,54 @@ describe('RequestsApiService', () => {
     expect(req.request.method).toBe('GET');
     expect(result).toEqual(['Dana', 'Lee']);
   });
+
+  const sample: RequestDto = {
+    id: 7,
+    title: 'T',
+    organizationName: 'Org',
+    status: 'New',
+    priority: 'High',
+    assignedTo: 'Dana',
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+    version: 'AAA=',
+  };
+
+  it('getById_Id_RequestsThatUrl', () => {
+    service.getById(7).subscribe();
+
+    const req = http.expectOne('/api/requests/7');
+    expect(req.request.method).toBe('GET');
+    req.flush(sample);
+  });
+
+  it('getById_Response_ReturnsBody', () => {
+    let result: RequestDto | undefined;
+    service.getById(7).subscribe((r) => (result = r));
+
+    http.expectOne('/api/requests/7').flush(sample);
+
+    expect(result).toEqual(sample);
+  });
+
+  it('updateStatus_Body_SendsPatchWithStatusVersionAndChangedBy', () => {
+    service.updateStatus(7, { status: 'Waiting', version: 'AAA=', changedBy: 'Dana' }).subscribe();
+
+    const req = http.expectOne('/api/requests/7/status');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ status: 'Waiting', version: 'AAA=', changedBy: 'Dana' });
+    req.flush(sample);
+  });
+
+  it('updateStatus_Response_ReturnsUpdatedRequest', () => {
+    const updated = { ...sample, status: 'Waiting' as const, version: 'BBB=' };
+    let result: RequestDto | undefined;
+    service
+      .updateStatus(7, { status: 'Waiting', version: 'AAA=', changedBy: 'Dana' })
+      .subscribe((r) => (result = r));
+
+    http.expectOne('/api/requests/7/status').flush(updated);
+
+    expect(result).toEqual(updated);
+  });
 });

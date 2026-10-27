@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PagedResult } from '../models/paged-result.model';
 import { RequestQuery } from '../models/request-query.model';
-import { RequestDto } from '../models/request.model';
+import { RequestDto, UpdateStatusRequest } from '../models/request.model';
 
 @Injectable({ providedIn: 'root' })
 export class RequestsApiService {
@@ -11,6 +11,14 @@ export class RequestsApiService {
 
   getPaged(query: RequestQuery): Observable<PagedResult<RequestDto>> {
     return this.http.get<PagedResult<RequestDto>>('/api/requests', { params: toHttpParams(query) });
+  }
+
+  getById(id: number): Observable<RequestDto> {
+    return this.http.get<RequestDto>(`/api/requests/${id}`);
+  }
+
+  updateStatus(id: number, body: UpdateStatusRequest): Observable<RequestDto> {
+    return this.http.patch<RequestDto>(`/api/requests/${id}/status`, body);
   }
 
   getAssignees(): Observable<string[]> {
