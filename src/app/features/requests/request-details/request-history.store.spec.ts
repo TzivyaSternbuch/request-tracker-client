@@ -173,16 +173,28 @@ describe('RequestHistoryStore', () => {
 
   it('load_WhileLoadingMore_CancelsItAndStartsOverFromPageOne', () => {
     store.load(5);
-    api.last.subject.next(aPage([5, 4], 1, 3));
+    api.last.subject.next(aPage(FULL_PAGE, 1, HISTORY_PAGE_SIZE + 1));
     store.loadMore();
     const stale = api.last;
 
     store.load(5);
-    stale.subject.next(aPage([3], 2, 3));
+    stale.subject.next(aPage([0], 2, HISTORY_PAGE_SIZE + 1));
 
     expect(store.loadingMore()).toBe(false);
-    expect(store.items()).toHaveLength(2);
-    api.last.subject.next(aPage([6, 5], 1, 3));
-    expect(store.items().map((e) => e.id)).toEqual([6, 5]);
+    expect(store.items()).toHaveLength(HISTORY_PAGE_SIZE);
+    api.last.subject.next(aPage([12, 11], 1, 2));
+    expect(store.items().map((e) => e.id)).toEqual([12, 11]);
+  });
+
+  it('loadMore_EntryAddedSinceFirstPage_SkipsTheRepeatedEntryAndStopsAtTheEnd', () => {
+    store.load(5);
+    api.last.subject.next(aPage(FULL_PAGE, 1, HISTORY_PAGE_SIZE + 1));
+
+    // Entry 11 was added after page 1 loaded, so page 2 now starts with entry 1, the last one already shown.
+    store.loadMore();
+    api.last.subject.next(aPage([1, 0], 2, HISTORY_PAGE_SIZE + 2));
+
+    expect(store.items().map((e) => e.id)).toEqual([...FULL_PAGE, 0]);
+    expect(store.hasMore()).toBe(false);
   });
 });
