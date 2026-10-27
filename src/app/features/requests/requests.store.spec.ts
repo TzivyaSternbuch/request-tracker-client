@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 import { RequestsApiService } from '../../core/api/requests-api.service';
 import { PagedResult } from '../../core/models/paged-result.model';
 import {
@@ -21,11 +21,18 @@ interface GetPagedCall {
 // Each call gets its own Subject, so a test decides when (and whether) a response arrives.
 class FakeRequestsApi {
   readonly calls: GetPagedCall[] = [];
+  assigneesCalls = 0;
+  assigneesResponse: Observable<string[]> = of(['Avi', 'Dana']);
 
   getPaged(query: RequestQuery): Observable<PagedResult<RequestDto>> {
     const response = new Subject<PagedResult<RequestDto>>();
     this.calls.push({ query, response });
     return response;
+  }
+
+  getAssignees(): Observable<string[]> {
+    this.assigneesCalls++;
+    return this.assigneesResponse;
   }
 
   lastCall(): GetPagedCall {
@@ -83,6 +90,31 @@ describe('RequestsStore', () => {
     expect(store.errorMessage()).toBeNull();
   });
 
+  it('init_LoadsAssigneesOnce', async () => {
+    const store = await createStore();
+
+    store.setFilters({ status: ['New'] });
+    await settle();
+    store.toggleSort('title');
+    await settle();
+
+    expect(api.assigneesCalls).toBe(1);
+    expect(store.assignees()).toEqual(['Avi', 'Dana']);
+    expect(store.assigneesError()).toBe(false);
+  });
+
+  it('init_AssigneesFail_ListStillLoads', async () => {
+    api.assigneesResponse = throwError(() => new HttpErrorResponse({ status: 500 }));
+
+    const store = await createStore();
+    api.lastCall().response.next({ items: [ROW], page: 1, pageSize: 20, totalCount: 1 });
+
+    expect(store.assigneesError()).toBe(true);
+    expect(store.assignees()).toEqual([]);
+    expect(api.calls.length).toBe(1);
+    expect(store.status()).toBe('success');
+  });
+
   it('init_InvalidUrl_RewritesToNormalizedUrl', async () => {
     await createStore('/?page=abc&status=New');
 
@@ -101,6 +133,20 @@ describe('RequestsStore', () => {
     expect(api.calls.length).toBe(2);
     expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, status: ['New'], page: 1 });
     expect(store.query()).toEqual(api.lastCall().query);
+  });
+
+  it('setFilters_AssignedTo_ReplacesSelectionAndResetsPage', async () => {
+    const store = await createStore('/?assignedTo=Lee&assignedTo=Kim&page=3');
+
+    store.setFilters({ assignedTo: [' Dana ', 'Avi', 'Avi', ''] });
+    await settle();
+
+    expect(router.url).toBe('/?assignedTo=Dana&assignedTo=Avi');
+    expect(api.lastCall().query).toEqual({
+      ...DEFAULT_QUERY,
+      assignedTo: ['Dana', 'Avi'],
+      page: 1,
+    });
   });
 
   it('toggleSort_Field_WritesSortParamAndResetsPage', async () => {

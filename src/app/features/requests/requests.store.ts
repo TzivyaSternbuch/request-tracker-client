@@ -34,6 +34,12 @@ type LoadResult = { ok: true; page: PagedResult<RequestDto> } | { ok: false; mes
 
 const TEXT_DEBOUNCE_MS = 300;
 
+/** Trimmed, non-blank, distinct (case-sensitive) names in order, cut at the filter limit. */
+function cleanNames(names: readonly string[]): string[] {
+  const trimmed = names.map((name) => name.trim()).filter((name) => name !== '');
+  return [...new Set(trimmed)].slice(0, MAX_FILTER_VALUES);
+}
+
 /**
  * State of the request list. The URL is the single source of truth: actions only compute the next query and
  * navigate; the pipeline reads the route's query params, so a UI change, a refresh and a pasted link take one path.
@@ -55,6 +61,8 @@ export class RequestsStore {
   private readonly errorMessageSignal = signal<string | null>(null);
   private readonly searchDraftSignal = signal('');
   private readonly organizationDraftSignal = signal('');
+  private readonly assigneesSignal = signal<string[]>([]);
+  private readonly assigneesErrorSignal = signal(false);
 
   /** Reloads the current query; a query change alone can't, because the pipeline ignores an unchanged query. */
   private readonly reload$ = new Subject<void>();
@@ -80,8 +88,19 @@ export class RequestsStore {
   readonly searchDraft = this.searchDraftSignal.asReadonly();
   /** The untrimmed text in the organization box. */
   readonly organizationDraft = this.organizationDraftSignal.asReadonly();
+  /** Every assignee name, loaded once when the store starts; stays empty if that load fails. */
+  readonly assignees = this.assigneesSignal.asReadonly();
+  readonly assigneesError = this.assigneesErrorSignal.asReadonly();
 
   constructor() {
+    this.api
+      .getAssignees()
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (names) => this.assigneesSignal.set(names),
+        error: () => this.assigneesErrorSignal.set(true),
+      });
+
     const urlQuery$ = this.route.queryParamMap.pipe(
       map((params) => fromQueryParams(params)),
       tap(({ query, invalid }) => {
@@ -149,7 +168,8 @@ export class RequestsStore {
   }
 
   setFilters(patch: ImmediateFilters): void {
-    this.navigate({ ...this.nextQuery(), ...patch, page: 1 });
+    const next = patch.assignedTo ? { ...patch, assignedTo: cleanNames(patch.assignedTo) } : patch;
+    this.navigate({ ...this.nextQuery(), ...next, page: 1 });
   }
 
   /**
@@ -157,11 +177,10 @@ export class RequestsStore {
    * second add or remove right after the first keeps both. A blank or already listed name, or a full list, is ignored.
    */
   addAssignee(name: string): void {
-    const trimmed = name.trim();
     const query = this.nextQuery();
-    const current = query.assignedTo;
-    if (!trimmed || current.includes(trimmed) || current.length >= MAX_FILTER_VALUES) return;
-    this.navigate({ ...query, assignedTo: [...current, trimmed], page: 1 });
+    const next = cleanNames([...query.assignedTo, name]);
+    if (next.length === query.assignedTo.length) return;
+    this.navigate({ ...query, assignedTo: next, page: 1 });
   }
 
   removeAssignee(name: string): void {

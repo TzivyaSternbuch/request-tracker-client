@@ -12,6 +12,10 @@ export class RequestsApiService {
   getPaged(query: RequestQuery): Observable<PagedResult<RequestDto>> {
     return this.http.get<PagedResult<RequestDto>>('/api/requests', { params: toHttpParams(query) });
   }
+
+  getAssignees(): Observable<string[]> {
+    return this.http.get<string[]>('/api/requests/assignees');
+  }
 }
 
 // Empty values are left out so they don't reach the server as empty strings.

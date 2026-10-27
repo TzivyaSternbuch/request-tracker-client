@@ -221,6 +221,10 @@ describe('RequestsListComponent on its route', () => {
       this.queries.push(query);
       return of({ items: [ROW], page: query.page, pageSize: query.pageSize, totalCount: 1 });
     }
+
+    getAssignees(): Observable<string[]> {
+      return of([]);
+    }
   }
 
   it('navigate_InvalidUrl_RewritesUrlAndLoadsOnce', async () => {

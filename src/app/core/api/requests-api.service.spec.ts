@@ -91,4 +91,15 @@ describe('RequestsApiService', () => {
 
     expect(result).toEqual(body);
   });
+
+  it('getAssignees_Response_ReturnsNames', () => {
+    let result: string[] | undefined;
+
+    service.getAssignees().subscribe((names) => (result = names));
+    const req = http.expectOne('/api/requests/assignees');
+    req.flush(['Dana', 'Lee']);
+
+    expect(req.request.method).toBe('GET');
+    expect(result).toEqual(['Dana', 'Lee']);
+  });
 });

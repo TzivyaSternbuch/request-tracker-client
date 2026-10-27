@@ -41,12 +41,9 @@ export interface RequestFilters {
   createdTo: string | null;
 }
 
-/**
- * The filters a single change replaces at once. Search and organization travel as drafts, and assignees as
- * add/remove intents, so they aren't here.
- */
+/** The filters a single change replaces at once. Search and organization travel as drafts, so they aren't here. */
 export type ImmediateFilters = Partial<
-  Pick<RequestFilters, 'status' | 'priority' | 'createdFrom' | 'createdTo'>
+  Pick<RequestFilters, 'status' | 'priority' | 'assignedTo' | 'createdFrom' | 'createdTo'>
 >;
 
 export interface RequestQuery extends RequestFilters {
