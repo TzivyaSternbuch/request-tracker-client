@@ -76,7 +76,13 @@
       }
     </div>
 
-    <button class="icon-button" type="button" aria-label="Close" (click)="close()">
+    <button
+      class="icon-button"
+      type="button"
+      aria-label="Close"
+      [disabled]="saving()"
+      (click)="close()"
+    >
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
         <path
           fill="currentColor"

@@ -109,6 +109,28 @@ describe('RequestDetailsStore', () => {
     expect(store.request()?.id).toBe(6);
   });
 
+  it('load_OtherIdAfterLoaded_ClearsPreviousRequestWhileLoading', () => {
+    loaded(aRequest({ id: 5 }));
+
+    store.load(6);
+
+    expect(store.request()).toBeNull();
+    expect(store.loadState()).toBe('loading');
+  });
+
+  it('retry_AfterLoaded_KeepsRequestWhileLoading', () => {
+    loaded();
+
+    store.retry();
+
+    expect(store.request()?.id).toBe(5);
+    expect(store.loadState()).toBe('loading');
+  });
+
+  it('updated$_Consumer_CannotEmit', () => {
+    expect('next' in store.updated$).toBe(false);
+  });
+
   it('updateStatus_Success_ReplacesRequestWithResponseAndEmitsUpdated', () => {
     loaded();
     let emitted = 0;

@@ -42,13 +42,16 @@ describe('RequestDetailsComponent', () => {
   let fixture: ComponentFixture<RequestDetailsComponent>;
   let root: HTMLElement;
 
+  let dialogRef: { close: ReturnType<typeof vi.fn>; disableClose: boolean };
+
   beforeEach(() => {
+    dialogRef = { close: vi.fn(), disableClose: false };
     store = new FakeDetailsStore();
     listStore = { retry: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: { id: 5 } },
-        { provide: MatDialogRef, useValue: { close: vi.fn() } },
+        { provide: MatDialogRef, useValue: dialogRef },
         { provide: RequestsStore, useValue: listStore },
       ],
     });
@@ -201,6 +204,23 @@ describe('RequestDetailsComponent', () => {
 
     expect(root.querySelector('form')).not.toBeNull();
     expect(root.querySelector('.error')?.textContent).toContain('New cannot go to Completed.');
+  });
+
+  it('render_Saving_BlocksClosingTheDialog', async () => {
+    await render();
+    expect(dialogRef.disableClose).toBe(false);
+
+    store.saveState.set('saving');
+    await fixture.whenStable();
+
+    expect(dialogRef.disableClose).toBe(true);
+    expect(button('Close').disabled).toBe(true);
+
+    store.saveState.set('idle');
+    await fixture.whenStable();
+
+    expect(dialogRef.disableClose).toBe(false);
+    expect(button('Close').disabled).toBe(false);
   });
 
   it('render_Conflict_ShowsSomeoneElseChangedMessage', async () => {

@@ -1,5 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -53,6 +60,8 @@ export class RequestDetailsComponent {
   );
 
   constructor() {
+    // Esc and the backdrop would otherwise close the dialog mid-save and abort the request, leaving the list stale.
+    effect(() => (this.dialogRef.disableClose = this.saving()));
     this.store.load(this.data.id);
     this.store.updated$.pipe(takeUntilDestroyed()).subscribe(() => {
       this.panelOpen.set(false);
