@@ -73,8 +73,8 @@ import { initials } from './shared/initials';
       border-radius: 50%;
       font-size: 12px;
       font-weight: 600;
-      background: var(--app-tone-blue-background);
-      color: var(--app-tone-blue-text);
+      background: var(--app-tone-gray-background);
+      color: var(--app-tone-gray-text);
     }
 
     main {

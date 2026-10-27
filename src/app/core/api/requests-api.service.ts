@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PagedResult } from '../models/paged-result.model';
 import { RequestQuery } from '../models/request-query.model';
+import { RequestStats } from '../models/request-stats.model';
 import { RequestDto, UpdateStatusRequest } from '../models/request.model';
 
 @Injectable({ providedIn: 'root' })
@@ -23,6 +24,10 @@ export class RequestsApiService {
 
   getAssignees(): Observable<string[]> {
     return this.http.get<string[]>('/api/requests/assignees');
+  }
+
+  getStats(): Observable<RequestStats> {
+    return this.http.get<RequestStats>('/api/requests/stats');
   }
 }
 

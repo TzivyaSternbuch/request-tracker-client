@@ -24,8 +24,6 @@ const COLUMNS: readonly Column[] = [
   { field: 'updatedAt', label: 'Updated' },
 ];
 
-const AVATAR_TONES = ['blue', 'amber', 'green', 'red', 'gray'] as const;
-
 @Component({
   selector: 'app-requests-table',
   imports: [DatePipe, MatTableModule, RouterLink, StatusPillComponent],
@@ -59,13 +57,6 @@ export class RequestsTableComponent {
 
   protected levelOf(field: RequestSortField) {
     return this.levels().get(field);
-  }
-
-  /** The same name always gets the same colour; a simple character sum spreads names over the tones. */
-  protected avatarTone(name: string): (typeof AVATAR_TONES)[number] {
-    let sum = 0;
-    for (const char of name) sum += char.charCodeAt(0);
-    return AVATAR_TONES[sum % AVATAR_TONES.length];
   }
 
   protected ariaSort(field: RequestSortField): 'ascending' | 'descending' | null {

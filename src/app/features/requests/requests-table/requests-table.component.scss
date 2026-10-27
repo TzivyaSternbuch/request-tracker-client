@@ -156,11 +156,6 @@ table.loading tbody {
   line-height: 26px;
   text-align: center;
   font-weight: 600;
-}
-
-@each $tone in 'blue', 'amber', 'green', 'red', 'gray' {
-  .avatar--#{$tone} {
-    background: var(--app-tone-#{$tone}-background);
-    color: var(--app-tone-#{$tone}-text);
-  }
+  background: var(--app-tone-gray-background);
+  color: var(--app-tone-gray-text);
 }

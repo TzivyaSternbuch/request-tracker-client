@@ -14,6 +14,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { RouterOutlet } from '@angular/router';
 import { PAGE_SIZE_OPTIONS } from '../../../core/models/request-query.model';
 import { ThousandsPaginatorIntl } from '../../../shared/thousands-paginator-intl';
+import { RequestStatsComponent } from '../request-stats/request-stats.component';
+import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsFilterBarComponent } from '../requests-filter-bar/requests-filter-bar.component';
 import { RequestsTableComponent } from '../requests-table/requests-table.component';
 import { LoadStatus, RequestsStore } from '../requests.store';
@@ -30,17 +32,23 @@ import { LoadStatus, RequestsStore } from '../requests.store';
     MatButtonModule,
     MatPaginatorModule,
     MatProgressBarModule,
+    RequestStatsComponent,
     RequestsFilterBarComponent,
     RequestsTableComponent,
     RouterOutlet,
   ],
-  providers: [RequestsStore, { provide: MatPaginatorIntl, useClass: ThousandsPaginatorIntl }],
+  providers: [
+    RequestsStore,
+    RequestStatsStore,
+    { provide: MatPaginatorIntl, useClass: ThousandsPaginatorIntl },
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './requests-list.component.html',
   styleUrl: './requests-list.component.scss',
 })
 export class RequestsListComponent {
   protected readonly store = inject(RequestsStore);
+  protected readonly statsStore = inject(RequestStatsStore);
   private readonly paginator = viewChild(MatPaginator);
 
   protected readonly pageSizeOptions = [...PAGE_SIZE_OPTIONS];

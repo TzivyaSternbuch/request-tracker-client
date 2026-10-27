@@ -4,6 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { ActingAsService } from '../../../core/acting-as.service';
 import { RequestDto, RequestStatus } from '../../../core/models/request.model';
+import { RequestStatsStore } from '../request-stats/request-stats.store';
 import { RequestsStore } from '../requests.store';
 import { DetailsLoadState, RequestDetailsStore, SaveState } from './request-details.store';
 import { RequestDetailsComponent } from './request-details.component';
@@ -39,6 +40,7 @@ class FakeDetailsStore {
 describe('RequestDetailsComponent', () => {
   let store: FakeDetailsStore;
   let listStore: { retry: ReturnType<typeof vi.fn> };
+  let statsStore: { refresh: ReturnType<typeof vi.fn> };
   let fixture: ComponentFixture<RequestDetailsComponent>;
   let root: HTMLElement;
 
@@ -48,11 +50,13 @@ describe('RequestDetailsComponent', () => {
     dialogRef = { close: vi.fn(), disableClose: false };
     store = new FakeDetailsStore();
     listStore = { retry: vi.fn() };
+    statsStore = { refresh: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: { id: 5 } },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: RequestsStore, useValue: listStore },
+        { provide: RequestStatsStore, useValue: statsStore },
       ],
     });
     TestBed.overrideComponent(RequestDetailsComponent, {
@@ -239,6 +243,7 @@ describe('RequestDetailsComponent', () => {
     await fixture.whenStable();
 
     expect(listStore.retry).toHaveBeenCalledOnce();
+    expect(statsStore.refresh).toHaveBeenCalledOnce();
     expect(root.querySelector('form')).toBeNull();
   });
 });

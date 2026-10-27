@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { PagedResult } from '../models/paged-result.model';
 import { DEFAULT_QUERY, RequestQuery } from '../models/request-query.model';
+import { RequestStats } from '../models/request-stats.model';
 import { RequestDto } from '../models/request.model';
 import { RequestsApiService } from './requests-api.service';
 
@@ -101,6 +102,23 @@ describe('RequestsApiService', () => {
 
     expect(req.request.method).toBe('GET');
     expect(result).toEqual(['Dana', 'Lee']);
+  });
+
+  it('getStats_Response_ReturnsBody', () => {
+    const body: RequestStats = {
+      asOf: '2026-10-27T12:00:00+00:00',
+      countByStatus: { New: 1, InProgress: 0, Waiting: 0, Completed: 2 },
+      openRequestAge: { underSevenDays: 1, sevenToUnderThirtyDays: 0, thirtyDaysOrMore: 0 },
+      topAssignees: [{ assignedTo: 'Dana', openCount: 1 }],
+    };
+    let result: RequestStats | undefined;
+
+    service.getStats().subscribe((r) => (result = r));
+    const req = http.expectOne('/api/requests/stats');
+    req.flush(body);
+
+    expect(req.request.method).toBe('GET');
+    expect(result).toEqual(body);
   });
 
   const sample: RequestDto = {
