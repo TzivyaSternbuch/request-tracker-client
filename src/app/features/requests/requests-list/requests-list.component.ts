@@ -52,6 +52,8 @@ export class RequestsListComponent {
   protected readonly showTotal = computed(
     () => this.loadedOnce() && this.store.status() !== 'error',
   );
+  /** No sort levels chosen: the API applies its default order (newest first). */
+  protected readonly defaultOrder = computed(() => this.store.query().sort.length === 0);
   protected readonly empty = computed(
     () => this.store.status() === 'success' && this.store.items().length === 0,
   );

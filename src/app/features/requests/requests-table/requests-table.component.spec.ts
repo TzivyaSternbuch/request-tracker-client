@@ -52,7 +52,9 @@ describe('RequestsTableComponent', () => {
   it('render_Items_ShowsColumnsInOrder', async () => {
     await render([aRequest()], []);
 
-    const headers = Array.from(root.querySelectorAll('th')).map((th) => th.textContent?.trim());
+    const headers = Array.from(root.querySelectorAll('th')).map((th) =>
+      th.textContent?.replace(/\s+/g, ' ').trim(),
+    );
     const cells = Array.from(root.querySelectorAll<HTMLElement>('tbody tr:first-child td')).map(
       visibleText,
     );
@@ -63,8 +65,8 @@ describe('RequestsTableComponent', () => {
       'Status',
       'Priority',
       'Assignee',
-      'Created (UTC)',
-      'Updated (UTC)',
+      'Created',
+      'Updated',
     ]);
     expect(cells).toEqual([
       '7',
@@ -129,36 +131,12 @@ describe('RequestsTableComponent', () => {
     );
   });
 
-  it('render_NoSort_ShowsDefaultNoteAndDisablesReset', async () => {
+  it('render_NoSort_LabelsHeadersNotSorted', async () => {
     await render([aRequest()], []);
 
-    const reset = Array.from(root.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('Reset sorting'),
-    );
-    expect(root.textContent).toContain('Default order: newest first');
-    expect(reset?.disabled).toBe(true);
     expect(headerCell('Title').querySelector('button')?.getAttribute('aria-label')).toBe(
       'Title, not sorted',
     );
-  });
-
-  it('render_DateColumns_AriaLabelContainsVisibleLabel', async () => {
-    await render([aRequest()], [{ field: 'createdAt', direction: 'desc' }]);
-
-    const created = headerCell('Created').querySelector('button')?.getAttribute('aria-label');
-    const updated = headerCell('Updated').querySelector('button')?.getAttribute('aria-label');
-    expect(created).toBe('Created (UTC), sorted descending');
-    expect(updated).toBe('Updated (UTC), not sorted');
-  });
-
-  it('render_WithSort_HidesDefaultNoteAndEnablesReset', async () => {
-    await render([aRequest()], [{ field: 'id', direction: 'asc' }]);
-
-    const reset = Array.from(root.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('Reset sorting'),
-    );
-    expect(root.textContent).not.toContain('Default order');
-    expect(reset?.disabled).toBe(false);
   });
 
   it('headerClick_Column_EmitsSortToggleWithField', async () => {
@@ -169,18 +147,6 @@ describe('RequestsTableComponent', () => {
     headerCell('Organization').querySelector('button')?.click();
 
     expect(emitted).toEqual(['organizationName']);
-  });
-
-  it('resetClick_EmitsSortReset', async () => {
-    await render([aRequest()], [{ field: 'id', direction: 'asc' }]);
-    let resets = 0;
-    fixture.componentInstance.sortReset.subscribe(() => resets++);
-
-    Array.from(root.querySelectorAll('button'))
-      .find((b) => b.textContent?.includes('Reset sorting'))
-      ?.click();
-
-    expect(resets).toBe(1);
   });
 
   it('render_Loading_DimsRows', async () => {

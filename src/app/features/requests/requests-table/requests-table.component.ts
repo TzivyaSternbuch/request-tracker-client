@@ -1,6 +1,5 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { RequestDto } from '../../../core/models/request.model';
 import { RequestSortField, SortLevel } from '../../../core/models/request-query.model';
@@ -20,15 +19,15 @@ const COLUMNS: readonly Column[] = [
   { field: 'status', label: 'Status' },
   { field: 'priority', label: 'Priority' },
   { field: 'assignedTo', label: 'Assignee' },
-  { field: 'createdAt', label: 'Created (UTC)' },
-  { field: 'updatedAt', label: 'Updated (UTC)' },
+  { field: 'createdAt', label: 'Created' },
+  { field: 'updatedAt', label: 'Updated' },
 ];
 
 const AVATAR_TONES = ['blue', 'amber', 'green', 'red', 'gray'] as const;
 
 @Component({
   selector: 'app-requests-table',
-  imports: [DatePipe, MatTableModule, MatButtonModule, StatusPillComponent],
+  imports: [DatePipe, MatTableModule, StatusPillComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './requests-table.component.html',
   styleUrl: './requests-table.component.scss',
@@ -39,7 +38,6 @@ export class RequestsTableComponent {
   readonly loading = input(false);
 
   readonly sortToggle = output<RequestSortField>();
-  readonly sortReset = output<void>();
 
   protected readonly columns = COLUMNS;
   protected readonly fields = COLUMNS.map((column) => column.field);
