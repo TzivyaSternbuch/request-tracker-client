@@ -5,11 +5,7 @@ import { provideRouter, Router } from '@angular/router';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { RequestsApiService } from '../../core/api/requests-api.service';
 import { PagedResult } from '../../core/models/paged-result.model';
-import {
-  DEFAULT_QUERY,
-  MAX_FILTER_VALUES,
-  RequestQuery,
-} from '../../core/models/request-query.model';
+import { DEFAULT_QUERY, RequestQuery } from '../../core/models/request-query.model';
 import { RequestDto } from '../../core/models/request.model';
 import { RequestsStore } from './requests.store';
 
@@ -226,7 +222,7 @@ describe('RequestsStore', () => {
     const store = await createStore();
     api.lastCall().response.error(new HttpErrorResponse({ status: 500 }));
 
-    store.addAssignee('dana');
+    store.setFilters({ assignedTo: ['dana'] });
     await settle();
     api.lastCall().response.next({ items: [ROW], page: 1, pageSize: 20, totalCount: 1 });
 
@@ -264,51 +260,6 @@ describe('RequestsStore', () => {
       status: ['New'],
       sort: [{ field: 'title', direction: 'asc' }],
     });
-  });
-
-  it('addAssignee_Name_AddsTrimmedNameOnPageOne', async () => {
-    const store = await createStore('/?assignedTo=ann&page=3');
-
-    store.addAssignee('  dana ');
-    await settle();
-
-    expect(router.url).toBe('/?assignedTo=ann&assignedTo=dana');
-    expect(api.lastCall().query).toEqual({ ...DEFAULT_QUERY, assignedTo: ['ann', 'dana'] });
-  });
-
-  it('addAssignee_BlankOrDuplicateOrAtLimit_DoesNotNavigate', async () => {
-    const full = Array.from({ length: MAX_FILTER_VALUES }, (_, i) => `assignedTo=user${i}`);
-    const store = await createStore(`/?${full.join('&')}&page=3`);
-    const urlBefore = router.url;
-
-    store.addAssignee('   ');
-    store.addAssignee('user0');
-    store.addAssignee('dana');
-    await settle();
-
-    expect(router.url).toBe(urlBefore);
-    expect(api.calls.length).toBe(1);
-  });
-
-  it('addAssignee_TwoAddsBeforeNavigationSettles_KeepsBoth', async () => {
-    const store = await createStore();
-
-    store.addAssignee('ann');
-    store.addAssignee('dana');
-    await settle();
-
-    expect(store.query()).toEqual({ ...DEFAULT_QUERY, assignedTo: ['ann', 'dana'] });
-  });
-
-  it('removeAssignee_TwoRemovesBeforeNavigationSettles_RemovesBoth', async () => {
-    const store = await createStore('/?assignedTo=ann&assignedTo=dana&assignedTo=lee&page=3');
-
-    store.removeAssignee('ann');
-    store.removeAssignee('dana');
-    await settle();
-
-    expect(router.url).toBe('/?assignedTo=lee');
-    expect(store.query()).toEqual({ ...DEFAULT_QUERY, assignedTo: ['lee'] });
   });
 
   it('sameQuery_NavigatedAgain_DoesNotReload', async () => {

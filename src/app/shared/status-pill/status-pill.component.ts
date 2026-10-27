@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RequestPriority, RequestStatus } from '../../core/models/request.model';
+import { valueLabel } from '../value-label';
 
 type PillValue = RequestStatus | RequestPriority;
 type Tone = 'blue' | 'amber' | 'green' | 'red' | 'gray';
@@ -13,8 +14,6 @@ const TONES: Record<PillValue, Tone> = {
   Medium: 'amber',
   Low: 'gray',
 };
-
-const LABELS: Partial<Record<PillValue, string>> = { InProgress: 'In progress' };
 
 @Component({
   selector: 'app-status-pill',
@@ -61,5 +60,5 @@ export class StatusPillComponent {
   readonly value = input.required<PillValue>();
 
   protected readonly tone = computed(() => TONES[this.value()]);
-  protected readonly label = computed(() => LABELS[this.value()] ?? this.value());
+  protected readonly label = computed(() => valueLabel(this.value()));
 }

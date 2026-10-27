@@ -1,103 +1,241 @@
-<div class="bar">
-  <mat-form-field class="text">
-    <mat-label>Search</mat-label>
+<div class="header">
+  <ng-content />
+  <label class="search">
+    <svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="7" cy="7" r="5" />
+      <path d="M11 11l3.5 3.5" />
+    </svg>
     <input
       #search
-      matInput
       data-filter="search"
-      placeholder="Title or organization"
+      placeholder="Search title or organization"
+      aria-label="Search title or organization"
       [attr.maxlength]="textMaxLength"
       [value]="searchDraft()"
       (input)="searchDraftChange.emit(search.value)"
       (keydown.enter)="textSubmit.emit()"
     />
-  </mat-form-field>
+  </label>
+</div>
 
-  <mat-form-field>
-    <mat-label>Status</mat-label>
-    <mat-select
-      multiple
-      data-filter="status"
-      [value]="filters().status"
-      (selectionChange)="filtersChange.emit({ status: $event.value })"
+<!-- Each chip body stays the same element when its filter turns on or off: replacing it would close its open menu. -->
+<div class="chips">
+  <span class="chip" [class.on]="statusLabel()">
+    <button type="button" class="chip-body" data-chip="status" [matMenuTriggerFor]="statusMenu">
+      {{ statusLabel() ?? '+ Status' }}
+    </button>
+    @if (statusLabel()) {
+      <button
+        type="button"
+        class="chip-remove"
+        aria-label="Remove status filter"
+        (click)="filtersChange.emit({ status: [] })"
+      >
+        ✕
+      </button>
+    }
+  </span>
+
+  <span class="chip" [class.on]="priorityLabel()">
+    <button type="button" class="chip-body" data-chip="priority" [matMenuTriggerFor]="priorityMenu">
+      {{ priorityLabel() ?? '+ Priority' }}
+    </button>
+    @if (priorityLabel()) {
+      <button
+        type="button"
+        class="chip-remove"
+        aria-label="Remove priority filter"
+        (click)="filtersChange.emit({ priority: [] })"
+      >
+        ✕
+      </button>
+    }
+  </span>
+
+  <span class="chip" [class.on]="assigneeLabel()">
+    <button
+      type="button"
+      class="chip-body"
+      data-chip="assignee"
+      [matMenuTriggerFor]="assigneeMenu"
+      (menuOpened)="assigneeFilter.focus()"
     >
-      @for (status of statuses; track status) {
-        <mat-option [value]="status">{{ status }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+      {{ assigneeLabel() ?? '+ Assignee' }}
+    </button>
+    @if (assigneeLabel()) {
+      <button
+        type="button"
+        class="chip-remove"
+        aria-label="Remove assignee filter"
+        (click)="filtersChange.emit({ assignedTo: [] })"
+      >
+        ✕
+      </button>
+    }
+  </span>
 
-  <mat-form-field>
-    <mat-label>Priority</mat-label>
-    <mat-select
-      multiple
-      data-filter="priority"
-      [value]="filters().priority"
-      (selectionChange)="filtersChange.emit({ priority: $event.value })"
+  <span class="chip" [class.on]="organizationLabel()">
+    <button
+      #organizationTrigger="matMenuTrigger"
+      type="button"
+      class="chip-body"
+      data-chip="organization"
+      [matMenuTriggerFor]="organizationMenu"
+      (menuOpened)="organization.focus()"
     >
-      @for (priority of priorities; track priority) {
-        <mat-option [value]="priority">{{ priority }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+      {{ organizationLabel() ?? '+ Organization' }}
+    </button>
+    @if (organizationLabel()) {
+      <button
+        type="button"
+        class="chip-remove"
+        aria-label="Remove organization filter"
+        (click)="removeOrganization()"
+      >
+        ✕
+      </button>
+    }
+  </span>
 
-  <mat-form-field class="text">
-    <mat-label>Organization</mat-label>
+  <span class="chip created" [class.on]="createdLabel()">
+    <button type="button" class="chip-body" data-chip="created" (click)="createdPicker.open()">
+      {{ createdLabel() ?? '+ Created' }}
+    </button>
+    @if (createdLabel()) {
+      <button
+        type="button"
+        class="chip-remove"
+        aria-label="Remove created filter"
+        (click)="filtersChange.emit({ createdFrom: null, createdTo: null })"
+      >
+        ✕
+      </button>
+    }
+    <!-- The picker needs an input to hold the range and to anchor its popup; the chip is the visible control. -->
+    <mat-date-range-input
+      #createdRange="matDateRangeInput"
+      class="created-anchor"
+      aria-hidden="true"
+      [rangePicker]="createdPicker"
+    >
+      <input matStartDate tabindex="-1" [value]="createdFrom()" />
+      <input
+        matEndDate
+        tabindex="-1"
+        [value]="createdTo()"
+        (dateChange)="createdRangeChange(createdRange.value)"
+      />
+    </mat-date-range-input>
+    <mat-date-range-picker #createdPicker (closed)="resetCreatedInputs()" />
+  </span>
+
+  @if (anyFilterActive()) {
+    <button type="button" class="clear-all" (click)="clear.emit()">Clear all</button>
+  }
+</div>
+
+<!-- Clicks inside a menu would close it: the checklists stay open while the user ticks several values. -->
+<mat-menu #statusMenu="matMenu">
+  <div
+    class="menu"
+    cdkTrapFocus
+    role="group"
+    aria-label="Status"
+    (click)="$event.stopPropagation()"
+    (keydown)="keepKeysInMenu($event)"
+  >
+    @for (status of statuses; track status) {
+      <mat-checkbox
+        [checked]="selectedStatuses().has(status)"
+        (change)="toggleStatus(status, $event.checked)"
+      >
+        {{ label(status) }}
+      </mat-checkbox>
+    }
+  </div>
+</mat-menu>
+
+<mat-menu #priorityMenu="matMenu">
+  <div
+    class="menu"
+    cdkTrapFocus
+    role="group"
+    aria-label="Priority"
+    (click)="$event.stopPropagation()"
+    (keydown)="keepKeysInMenu($event)"
+  >
+    @for (priority of priorities; track priority) {
+      <mat-checkbox
+        [checked]="selectedPriorities().has(priority)"
+        (change)="togglePriority(priority, $event.checked)"
+      >
+        {{ label(priority) }}
+      </mat-checkbox>
+    }
+  </div>
+</mat-menu>
+
+<mat-menu #assigneeMenu="matMenu" (closed)="assigneeQuery.set('')">
+  <div
+    class="menu"
+    cdkTrapFocus
+    role="group"
+    aria-label="Assignee"
+    (click)="$event.stopPropagation()"
+    (keydown)="keepKeysInMenu($event)"
+  >
+    <input
+      #assigneeFilter
+      class="menu-input"
+      data-filter="assignee"
+      placeholder="Filter names"
+      aria-label="Filter names"
+      [value]="assigneeQuery()"
+      (input)="assigneeQuery.set(assigneeFilter.value)"
+    />
+    @if (assigneesError()) {
+      <p class="menu-note" role="alert">Couldn't load assignees</p>
+    }
+    @if (assigneesFull()) {
+      <p class="menu-note">At most {{ maxAssignees }} names</p>
+    }
+    <div class="options">
+      @for (name of assigneeOptions(); track name) {
+        <mat-checkbox
+          [checked]="selectedAssignees().has(name)"
+          [disabled]="assigneesFull() && !selectedAssignees().has(name)"
+          (change)="toggleAssignee(name, $event.checked)"
+        >
+          {{ name }}
+        </mat-checkbox>
+      } @empty {
+        @if (!assigneesError()) {
+          <p class="menu-note">No matching names</p>
+        }
+      }
+    </div>
+  </div>
+</mat-menu>
+
+<mat-menu #organizationMenu="matMenu">
+  <div
+    class="menu"
+    cdkTrapFocus
+    role="group"
+    aria-label="Organization"
+    (click)="$event.stopPropagation()"
+    (keydown)="keepKeysInMenu($event)"
+  >
     <input
       #organization
-      matInput
+      class="menu-input"
       data-filter="organization"
-      placeholder="Starts with"
+      placeholder="Organization starts with"
+      aria-label="Organization starts with"
       [attr.maxlength]="textMaxLength"
       [value]="organizationDraft()"
       (input)="organizationDraftChange.emit(organization.value)"
-      (keydown.enter)="textSubmit.emit()"
+      (keydown.enter)="textSubmit.emit(); organizationTrigger.closeMenu()"
     />
-  </mat-form-field>
-
-  <mat-form-field class="assignees">
-    <mat-label>Assignees</mat-label>
-    <mat-chip-grid #assigneeGrid aria-label="Assignees">
-      @for (name of filters().assignedTo; track name) {
-        <mat-chip-row (removed)="assigneeRemove.emit(name)">
-          {{ name }}
-          <button matChipRemove type="button" [attr.aria-label]="'Remove ' + name">
-            <span aria-hidden="true">×</span>
-          </button>
-        </mat-chip-row>
-      }
-      <input
-        placeholder="Name, then Enter"
-        [attr.maxlength]="assigneeMaxLength"
-        [matChipInputFor]="assigneeGrid"
-        [matChipInputSeparatorKeyCodes]="separatorKeys"
-        (matChipInputTokenEnd)="addAssignee($event)"
-      />
-    </mat-chip-grid>
-    @if (assigneesFull()) {
-      <mat-hint>At most {{ maxAssignees }} names</mat-hint>
-    }
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Created (UTC)</mat-label>
-    <mat-date-range-input [rangePicker]="createdPicker">
-      <input
-        matStartDate
-        placeholder="From"
-        [value]="createdFrom()"
-        (dateChange)="filtersChange.emit({ createdFrom: isoDate($event) })"
-      />
-      <input
-        matEndDate
-        placeholder="To"
-        [value]="createdTo()"
-        (dateChange)="filtersChange.emit({ createdTo: isoDate($event) })"
-      />
-    </mat-date-range-input>
-    <mat-datepicker-toggle matIconSuffix [for]="createdPicker" />
-    <mat-date-range-picker #createdPicker />
-  </mat-form-field>
-
-  <button mat-stroked-button type="button" (click)="clear.emit()">Clear filters</button>
-</div>
+  </div>
+</mat-menu>

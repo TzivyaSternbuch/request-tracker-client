@@ -37,10 +37,10 @@ class FakeRequestsStore {
   readonly errorMessage = signal<string | null>(null);
   readonly searchDraft = signal('');
   readonly organizationDraft = signal('');
+  readonly assignees = signal<string[]>([]);
+  readonly assigneesError = signal(false);
 
   readonly setFilters = vi.fn();
-  readonly addAssignee = vi.fn();
-  readonly removeAssignee = vi.fn();
   readonly clearFilters = vi.fn();
   readonly toggleSort = vi.fn();
   readonly resetSort = vi.fn();
@@ -231,8 +231,6 @@ describe('RequestsListComponent', () => {
     bar.organizationDraftChange.emit('glob');
     bar.textSubmit.emit();
     bar.filtersChange.emit({ priority: ['High'] });
-    bar.assigneeAdd.emit('dana');
-    bar.assigneeRemove.emit('ann');
     bar.clear.emit();
     table.sortToggle.emit('title');
     table.sortReset.emit();
@@ -241,8 +239,6 @@ describe('RequestsListComponent', () => {
     expect(store.setOrganizationDraft).toHaveBeenCalledExactlyOnceWith('glob');
     expect(store.submitText).toHaveBeenCalledOnce();
     expect(store.setFilters).toHaveBeenCalledExactlyOnceWith({ priority: ['High'] });
-    expect(store.addAssignee).toHaveBeenCalledExactlyOnceWith('dana');
-    expect(store.removeAssignee).toHaveBeenCalledExactlyOnceWith('ann');
     expect(store.clearFilters).toHaveBeenCalledOnce();
     expect(store.toggleSort).toHaveBeenCalledExactlyOnceWith('title');
     expect(store.resetSort).toHaveBeenCalledOnce();

@@ -1,23 +1,24 @@
 <section class="card">
-  <header class="card-header">
-    <h2>Requests</h2>
-    @if (showTotal()) {
-      <p class="total">{{ store.totalCount() | number }} total</p>
-    }
-  </header>
-
+  <!-- The bar puts the projected title on the left of the header row and its search box on the right. -->
   <app-requests-filter-bar
     [filters]="store.query()"
     [searchDraft]="store.searchDraft()"
     [organizationDraft]="store.organizationDraft()"
+    [assignees]="store.assignees()"
+    [assigneesError]="store.assigneesError()"
     (searchDraftChange)="store.setSearchDraft($event)"
     (organizationDraftChange)="store.setOrganizationDraft($event)"
     (textSubmit)="store.submitText()"
     (filtersChange)="store.setFilters($event)"
-    (assigneeAdd)="store.addAssignee($event)"
-    (assigneeRemove)="store.removeAssignee($event)"
     (clear)="store.clearFilters()"
-  />
+  >
+    <header class="card-header">
+      <h2>Requests</h2>
+      @if (showTotal()) {
+        <p class="total">{{ store.totalCount() | number }} total</p>
+      }
+    </header>
+  </app-requests-filter-bar>
 
   <!-- Stats KPI cards (stats task) go here -->
 

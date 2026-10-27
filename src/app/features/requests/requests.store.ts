@@ -172,22 +172,6 @@ export class RequestsStore {
     this.navigate({ ...this.nextQuery(), ...next, page: 1 });
   }
 
-  /**
-   * Applied to the last written list rather than the chips on screen, which lag until the navigation settles, so a
-   * second add or remove right after the first keeps both. A blank or already listed name, or a full list, is ignored.
-   */
-  addAssignee(name: string): void {
-    const query = this.nextQuery();
-    const next = cleanNames([...query.assignedTo, name]);
-    if (next.length === query.assignedTo.length) return;
-    this.navigate({ ...query, assignedTo: next, page: 1 });
-  }
-
-  removeAssignee(name: string): void {
-    const query = this.nextQuery();
-    this.navigate({ ...query, assignedTo: query.assignedTo.filter((n) => n !== name), page: 1 });
-  }
-
   /** Resets every filter and both drafts; sorting and page size are kept. */
   clearFilters(): void {
     this.searchDraftSignal.set('');
