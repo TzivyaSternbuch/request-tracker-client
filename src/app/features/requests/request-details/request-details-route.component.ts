@@ -45,8 +45,10 @@ export class RequestDetailsRouteComponent {
     const ref = this.dialog.open(RequestDetailsComponent, {
       data,
       injector: this.injector,
-      width: '640px',
+      width: '860px',
       maxWidth: 'calc(100vw - 32px)',
+      // The surface scrolls past this; without it a short window cuts the dialog off.
+      maxHeight: 'calc(100vh - 32px)',
     });
     this.dialogRef = ref;
     ref.afterClosed().subscribe(() => {

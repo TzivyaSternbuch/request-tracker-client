@@ -132,8 +132,8 @@ describe('RequestDetailsComponent', () => {
     expect(text).toContain('Dana Katz');
     expect(text).toContain('High');
     expect(text).toContain('New');
-    expect(text).toContain('2026-01-31 23:59 UTC');
-    expect(text).toContain('2026-02-01 08:05 UTC');
+    expect(text).toContain('31 Jan 2026, 23:59 UTC');
+    expect(text).toContain('1 Feb 2026, 08:05 UTC');
     expect(text).not.toContain(REQUEST.version);
   });
 

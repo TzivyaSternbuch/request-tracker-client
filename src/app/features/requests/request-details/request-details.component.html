@@ -3,66 +3,87 @@
     <div class="heading">
       @if (store.request(); as request) {
         <p class="number">REQUEST #{{ request.id }}</p>
-        <h2 class="title">{{ request.title }}</h2>
+        <div class="title-row">
+          <h2 class="title">{{ request.title }}</h2>
+          @if (showContent()) {
+            <app-status-pill [value]="request.status" />
+            <span class="pencil-anchor">
+              <button
+                class="icon-button"
+                type="button"
+                aria-label="Change status"
+                [attr.aria-expanded]="panelOpen()"
+                (click)="openPanel()"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                  />
+                </svg>
+              </button>
+
+              @if (panelOpen()) {
+                <form
+                  class="panel"
+                  aria-label="Change status"
+                  (submit)="$event.preventDefault(); save()"
+                >
+                  <h3>Change status</h3>
+
+                  <label>
+                    <span>New status</span>
+                    <select [disabled]="saving()" (change)="onStatusChange($event)">
+                      <option value="" [selected]="draftStatus() === ''" disabled></option>
+                      @for (status of statuses; track status) {
+                        <option [value]="status" [selected]="draftStatus() === status">
+                          {{ valueLabel(status) }}
+                        </option>
+                      }
+                    </select>
+                  </label>
+
+                  <label>
+                    <span>Changed by</span>
+                    <input
+                      type="text"
+                      maxlength="100"
+                      [value]="draftName()"
+                      [disabled]="saving()"
+                      (input)="onNameInput($event)"
+                    />
+                  </label>
+
+                  @if (store.saveError(); as error) {
+                    <p class="error" role="alert">{{ error }}</p>
+                  }
+
+                  <div class="actions">
+                    <button mat-button type="button" [disabled]="saving()" (click)="closePanel()">
+                      Cancel
+                    </button>
+                    <button mat-flat-button type="submit" [disabled]="!canSave()">
+                      Save changes
+                    </button>
+                  </div>
+                </form>
+              }
+            </span>
+          }
+        </div>
       } @else {
         <p class="number">REQUEST</p>
       }
     </div>
 
-    @if (showContent() && store.request(); as current) {
-      <div class="status-area">
-        <app-status-pill [value]="current.status" />
-        <button
-          mat-icon-button
-          type="button"
-          aria-label="Change status"
-          [attr.aria-expanded]="panelOpen()"
-          (click)="openPanel()"
-        >
-          ✎
-        </button>
-
-        @if (panelOpen()) {
-          <form class="panel" aria-label="Change status" (submit)="$event.preventDefault(); save()">
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>New status</mat-label>
-              <select matNativeControl [disabled]="saving()" (change)="onStatusChange($event)">
-                <option value="" [selected]="draftStatus() === ''" disabled></option>
-                @for (status of statuses; track status) {
-                  <option [value]="status" [selected]="draftStatus() === status">
-                    {{ valueLabel(status) }}
-                  </option>
-                }
-              </select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" subscriptSizing="dynamic">
-              <mat-label>Changed by</mat-label>
-              <input
-                matInput
-                maxlength="100"
-                [value]="draftName()"
-                [disabled]="saving()"
-                (input)="onNameInput($event)"
-              />
-            </mat-form-field>
-
-            @if (store.saveError(); as error) {
-              <p class="error" role="alert">{{ error }}</p>
-            }
-
-            <div class="actions">
-              <button mat-button type="button" [disabled]="saving()" (click)="closePanel()">
-                Cancel
-              </button>
-              <button mat-flat-button type="submit" [disabled]="!canSave()">Save changes</button>
-            </div>
-          </form>
-        }
-      </div>
-    }
-
-    <button mat-icon-button type="button" aria-label="Close" (click)="close()">✕</button>
+    <button class="icon-button" type="button" aria-label="Close" (click)="close()">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+        />
+      </svg>
+    </button>
   </header>
 
   @if (store.conflict()) {
@@ -71,52 +92,53 @@
     </p>
   }
 
-  @switch (store.loadState()) {
-    @case ('notFound') {
-      <div class="message">
-        <p>This request doesn't exist or was removed</p>
-        <button mat-stroked-button type="button" (click)="close()">Close</button>
-      </div>
-    }
-    @case ('error') {
-      <div class="message" role="alert">
-        <p>{{ store.errorMessage() }}</p>
-        <button mat-flat-button type="button" (click)="store.retry()">Retry</button>
-      </div>
-    }
-    @default {
-      @if (store.loadState() === 'loading') {
-        <mat-progress-bar mode="indeterminate" aria-label="Loading request" />
+  <!-- The right column is reserved for the history (task 15); it renders nothing until then. -->
+  <div class="body">
+    <div class="main">
+      @switch (store.loadState()) {
+        @case ('notFound') {
+          <div class="message">
+            <p>This request doesn't exist or was removed</p>
+            <button mat-stroked-button type="button" (click)="close()">Close</button>
+          </div>
+        }
+        @case ('error') {
+          <div class="message" role="alert">
+            <p>{{ store.errorMessage() }}</p>
+            <button mat-flat-button type="button" (click)="store.retry()">Retry</button>
+          </div>
+        }
+        @default {
+          @if (store.loadState() === 'loading') {
+            <mat-progress-bar mode="indeterminate" aria-label="Loading request" />
+          }
+          @if (store.request(); as request) {
+            <dl class="fields" [class.loading]="store.loadState() === 'loading'">
+              <div class="field">
+                <dt>Organization</dt>
+                <dd>{{ request.organizationName }}</dd>
+              </div>
+              <div class="field">
+                <dt>Assigned to</dt>
+                <dd>{{ request.assignedTo }}</dd>
+              </div>
+              <div class="field">
+                <dt>Priority</dt>
+                <dd><app-status-pill [value]="request.priority" /></dd>
+              </div>
+              <div class="field">
+                <dt>Created</dt>
+                <dd>{{ request.createdAt | date: 'd MMM y, HH:mm' : 'UTC' }} UTC</dd>
+              </div>
+              <div class="field">
+                <dt>Last updated</dt>
+                <dd>{{ request.updatedAt | date: 'd MMM y, HH:mm' : 'UTC' }} UTC</dd>
+              </div>
+            </dl>
+          }
+        }
       }
-      @if (store.request(); as request) {
-        <dl class="fields" [class.loading]="store.loadState() === 'loading'">
-          <div>
-            <dt>Organization</dt>
-            <dd>{{ request.organizationName }}</dd>
-          </div>
-          <div>
-            <dt>Assigned to</dt>
-            <dd class="assignee">
-              @if (initials(request.assignedTo); as letters) {
-                <span class="avatar" aria-hidden="true">{{ letters }}</span>
-              }
-              {{ request.assignedTo }}
-            </dd>
-          </div>
-          <div>
-            <dt>Priority</dt>
-            <dd><app-status-pill [value]="request.priority" /></dd>
-          </div>
-          <div>
-            <dt>Created</dt>
-            <dd>{{ request.createdAt | date: 'yyyy-MM-dd HH:mm' : 'UTC' }} UTC</dd>
-          </div>
-          <div>
-            <dt>Last updated</dt>
-            <dd>{{ request.updatedAt | date: 'yyyy-MM-dd HH:mm' : 'UTC' }} UTC</dd>
-          </div>
-        </dl>
-      }
-    }
-  }
+    </div>
+    <div class="history-column"></div>
+  </div>
 </div>
