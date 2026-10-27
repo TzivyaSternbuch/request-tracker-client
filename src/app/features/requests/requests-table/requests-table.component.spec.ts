@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { RequestDto } from '../../../core/models/request.model';
 import { RequestSortField, SortLevel } from '../../../core/models/request-query.model';
 import { RequestsTableComponent } from './requests-table.component';
@@ -23,9 +24,43 @@ describe('RequestsTableComponent', () => {
   let root: HTMLElement;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [RequestsTableComponent] });
+    TestBed.configureTestingModule({
+      imports: [RequestsTableComponent],
+      providers: [provideRouter([])],
+    });
     fixture = TestBed.createComponent(RequestsTableComponent);
     root = fixture.nativeElement as HTMLElement;
+  });
+
+  it('render_Items_TitleLinksToDetailsPreservingQuery', async () => {
+    TestBed.inject(Router).initialNavigation();
+    await render([aRequest({ id: 7 })], []);
+
+    const link = root.querySelector('a.title') as HTMLAnchorElement;
+
+    expect(link.getAttribute('href')).toBe('/requests/7');
+    expect(link.textContent).toContain('Fix the roof');
+  });
+
+  it('rowClick_Row_NavigatesToDetails', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    await render([aRequest({ id: 7 })], []);
+
+    (root.querySelector('tr.row td') as HTMLElement).click();
+
+    expect(navigate).toHaveBeenCalledWith(['/requests', 7], { queryParamsHandling: 'preserve' });
+  });
+
+  it('rowClick_TitleLink_LeavesNavigationToTheLink', async () => {
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const navigateByUrl = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    await render([aRequest({ id: 7 })], []);
+
+    (root.querySelector('a.title') as HTMLElement).click();
+
+    expect(navigateByUrl).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   async function render(items: RequestDto[], sort: SortLevel[], loading = false) {

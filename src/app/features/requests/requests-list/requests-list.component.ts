@@ -11,6 +11,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginator, MatPaginatorIntl, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { RouterOutlet } from '@angular/router';
 import { PAGE_SIZE_OPTIONS } from '../../../core/models/request-query.model';
 import { ThousandsPaginatorIntl } from '../../../shared/thousands-paginator-intl';
 import { RequestsFilterBarComponent } from '../requests-filter-bar/requests-filter-bar.component';
@@ -31,6 +32,7 @@ import { LoadStatus, RequestsStore } from '../requests.store';
     MatProgressBarModule,
     RequestsFilterBarComponent,
     RequestsTableComponent,
+    RouterOutlet,
   ],
   providers: [RequestsStore, { provide: MatPaginatorIntl, useClass: ThousandsPaginatorIntl }],
   changeDetection: ChangeDetectionStrategy.OnPush,

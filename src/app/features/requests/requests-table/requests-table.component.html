@@ -26,7 +26,13 @@
             <span class="muted no-wrap">{{ row.id }}</span>
           }
           @case ('title') {
-            <span class="title" [attr.title]="row.title">{{ row.title }}</span>
+            <a
+              class="title"
+              [attr.title]="row.title"
+              [routerLink]="['/requests', row.id]"
+              queryParamsHandling="preserve"
+              >{{ row.title }}</a
+            >
           }
           @case ('organizationName') {
             {{ row.organizationName }}
@@ -64,5 +70,5 @@
     </ng-container>
   }
   <tr mat-header-row class="header-row" *matHeaderRowDef="fields"></tr>
-  <tr mat-row class="row" *matRowDef="let row; columns: fields"></tr>
+  <tr mat-row class="row" *matRowDef="let row; columns: fields" (click)="openRow($event, row)"></tr>
 </table>

@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
+import { Router, RouterLink } from '@angular/router';
 import { RequestDto } from '../../../core/models/request.model';
 import { RequestSortField, SortLevel } from '../../../core/models/request-query.model';
 import { initials } from '../../../shared/initials';
@@ -27,7 +28,7 @@ const AVATAR_TONES = ['blue', 'amber', 'green', 'red', 'gray'] as const;
 
 @Component({
   selector: 'app-requests-table',
-  imports: [DatePipe, MatTableModule, StatusPillComponent],
+  imports: [DatePipe, MatTableModule, RouterLink, StatusPillComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './requests-table.component.html',
   styleUrl: './requests-table.component.scss',
@@ -39,6 +40,8 @@ export class RequestsTableComponent {
 
   readonly sortToggle = output<RequestSortField>();
 
+  private readonly router = inject(Router);
+
   protected readonly columns = COLUMNS;
   protected readonly fields = COLUMNS.map((column) => column.field);
   protected readonly initials = initials;
@@ -47,6 +50,12 @@ export class RequestsTableComponent {
     () =>
       new Map(this.sort().map((level, index) => [level.field, { ...level, number: index + 1 }])),
   );
+
+  /** The title link handles its own click (middle-click and new tab keep working); the rest of the row opens it too. */
+  protected openRow(event: MouseEvent, row: RequestDto): void {
+    if ((event.target as HTMLElement).closest('a')) return;
+    void this.router.navigate(['/requests', row.id], { queryParamsHandling: 'preserve' });
+  }
 
   protected levelOf(field: RequestSortField) {
     return this.levels().get(field);

@@ -46,6 +46,10 @@ table.loading tbody {
 }
 
 // Table tokens have no hover colour or text transform, so these sit on the component's own elements.
+.row {
+  cursor: pointer;
+}
+
 .row:hover {
   background: var(--app-row-hover);
 }
@@ -116,6 +120,12 @@ table.loading tbody {
   overflow: hidden;
   font-weight: 500;
   line-height: 20px;
+  color: var(--app-link);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .date {

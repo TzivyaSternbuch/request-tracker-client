@@ -59,6 +59,7 @@ describe('RequestsListComponent', () => {
   beforeEach(() => {
     store = new FakeRequestsStore();
     // Replaces only the store, so the component's other providers (the paginator labels) stay real.
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
     TestBed.overrideComponent(RequestsListComponent, {
       remove: { providers: [RequestsStore] },
       add: { providers: [{ provide: RequestsStore, useValue: store }] },
